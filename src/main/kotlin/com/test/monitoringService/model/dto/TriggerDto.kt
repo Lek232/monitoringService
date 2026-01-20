@@ -1,0 +1,33 @@
+package com.test.monitoringService.model.dto
+
+class TriggerDto(
+    val serviceName: String = "UNKNOWN",
+
+    val healthStatus: String = "UNKNOWN",
+
+    val databaseStatus: String = "UNKNOWN",
+
+    val availability: Double = 0.0,
+
+    val memoryLoad: Double = 0.0,
+
+    val cpuUsage: Double = 0.0,
+
+    val threadsLive: Int = 0,
+
+    val databaseLoad: Double = 0.0,
+
+    val consumptionDifference: Int = 0,
+
+    val totalQueries: Long = 0,
+
+    val totalCalls: Long = 0,
+
+    val maxTotalTimeMs: Double = 0.0,
+
+    val avgExecTimeMs: Double = 0.0,
+
+    val maxStddevExecTimeMs: Double = 0.0,
+
+    val avgCacheHit: Double = 0.0,
+)

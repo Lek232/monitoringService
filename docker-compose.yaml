@@ -1,0 +1,53 @@
+version: '3.4'
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: monitoring-postgres
+    environment:
+      POSTGRES_DB: metrics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1234"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  monitoring-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monitoring-service
+    depends_on:
+      - postgres
+    environment:
+      SPRING_APPLICATION_NAME: "monitoringService"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/metrics"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      SPRING_SQL_INIT_MODE: "always"
+      SPRING_JPA_OPEN_IN_VIEW: "false"
+      SPRING_PROFILES_ACTIVE: "docker"
+      SERVICES: ${SERVICES}
+
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring-network
+    restart: unless-stopped
+
+networks:
+  monitoring-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
