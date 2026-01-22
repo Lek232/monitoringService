@@ -4,6 +4,7 @@ import com.test.monitoringService.dao.MetricsDao
 import com.test.monitoringService.model.dto.ReportMetricsDto
 import org.springframework.stereotype.Component
 
+// TODO нейминг, у нас DTO не может быть компонентом, переименуй в сервис наверное или в Usecase, будет корректнее
 @Component
 class FillMetricsReportDto(
     val metricsDao: MetricsDao

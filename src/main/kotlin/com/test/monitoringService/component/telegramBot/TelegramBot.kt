@@ -13,15 +13,20 @@ import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.objects.Update
 
+/**
+ * TODO Необходимо сделать REST контроллер, для взаимодействия с сервисом, через телеграм хорошо, но нужно по HTTP ходить
+ */
 @Component
 class TelegramBot(
     val botProperties: BotProperties,
     val reportService: MetricsReportService,
+    // Не тянем конфигурацию, тянем сразу список сервисов
     fill: EnvServiceConfig,
     val postgresReportService: PostgresReportService,
     private val triggerInterface: TriggerInterface,
     val senderService: TelegramSenderService,
 ) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
+
 
     val servicesList = fill.serviceConfig().map { it.name }
 

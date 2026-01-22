@@ -12,7 +12,7 @@ class MetricsPoller(
     val mapper = jacksonObjectMapper()
 
     fun pollingMetrics(url: String, serviceName: String, apiKey: String): CreateMetricsEntityDto {
-
+// TODO Маппим не в дерево, а в DTO
         val healthNode = mapper.readTree(response.getHealth(url, apiKey))
 
         val healthStatus = healthNode["status"].asString()

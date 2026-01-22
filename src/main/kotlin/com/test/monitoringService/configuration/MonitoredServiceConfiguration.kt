@@ -17,6 +17,37 @@ class EnvServiceConfig {
 
     val log: Logger = LoggerFactory.getLogger(this::class.java)
 
+    /**
+     * TODO Используй данные из .properties или .yaml конфигурации spring, с помощью аннотации [org.springframework.beans.factory.annotation.Value]
+     * вместо парсинга файла .env, не хорошая практика.
+     *
+     *
+     * можно сделать так:
+     * @ConfigurationProperties(prefix = "services")
+     * public record ServicesEnvironment(
+     *         List<Services> list
+     * )
+     *
+     *
+     * @Setter
+     * @Getter
+     * public class DadataToken {
+     *     private String name;
+     *     private String apiKey;
+     * }
+     *
+     * а в самом .yaml
+     * services:
+     *      list:
+     *         - name: ""
+     *           apiKey: ""
+     *
+     *
+     * и далее в конструктор конфигурации ожидать ServicesEnvironment
+     * также над конфигурацией повесить
+     * @EnableConfigurationProperties(ServicesEnvironment.class)
+     * без этого не будет подтягиваться
+     */
     @PostConstruct
     fun loadEnvFile() {
         val envVar = System.getenv("SERVICES")
@@ -40,6 +71,9 @@ class EnvServiceConfig {
         }
     }
 
+    /**
+     * TODO сделай это бином, что бы сервисы возвращались
+     */
     fun serviceConfig(): List<Service> {
         val rawServices = System.getProperty("SERVICES", "")
 

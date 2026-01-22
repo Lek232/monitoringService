@@ -4,6 +4,7 @@ import com.test.monitoringService.dao.PostgresDao
 import com.test.monitoringService.model.dto.ReportPostgresDto
 import org.springframework.stereotype.Component
 
+// TODO нейминг, у нас DTO не может быть компонентом, переименуй в сервис наверное или в Usecase, будет корректнее
 @Component
 class FillPostgresReportDto(
     val postgresDao: PostgresDao,

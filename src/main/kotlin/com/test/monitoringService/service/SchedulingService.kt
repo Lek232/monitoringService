@@ -39,7 +39,26 @@ class SchedulingService(
     @Scheduled(fixedRate = 10_000)
     fun scheduledPolling() {
         log.info("Опрос сервисов: ${services.map { it.name }}")
+
+        // TODO если мы не ожидаем данные дальше, то используй forEach
         services.map {
+
+            /** TODO Если мы получаем ошибку, то можно вынести ее в finally
+             *  и можно использовать runCatching от kotlin, т.е.
+             *
+             *  runCatching {
+             *      *code
+             *  }.onFailure { exception ->
+             *      when(exception) {
+             *          is IllegalArgumentException -> log
+             *          ...
+             *      }
+             *
+             *      metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
+             *
+             *  }.getOrNull()
+             *
+             */
             try {
                 val metricDto = pollingMetrics.pollingMetrics(it.url, it.name, it.apiKey)
                 val metricEntity = metricDto.toMetricsEntity()

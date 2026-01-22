@@ -7,6 +7,10 @@ import org.springframework.stereotype.Component
 class PostgresDao(
     val jdbcTemplate: NamedParameterJdbcTemplate
 ) {
+
+    /**
+     * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
+     */
     fun getPostgres(serviceName: String): Map<String, Any>? {
         val sql = """
         SELECT 

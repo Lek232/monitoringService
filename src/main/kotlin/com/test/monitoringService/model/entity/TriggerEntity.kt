@@ -26,6 +26,9 @@ class TriggerEntity(
     @Column(name = "name", nullable = false, length = 100, unique = true)
     var name: String = "",
 
+    /**
+     * Должно быть not null
+     */
     @Column(name = "service_name", length = 100)
     var serviceName: String? = null,
 

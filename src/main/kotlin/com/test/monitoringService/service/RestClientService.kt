@@ -20,6 +20,10 @@ class RestClientService {
             .retrieve()
             .body<String>() ?: ""
 
+
+    /**
+     * TODO Вместо .body(String::class.java) Необходимо определить интерфейс который мы ожидаем и который будем маппить
+     */
     fun getMetric(serviceUrl: String, metric: String, statistic: String, apiKey: String): Double {
         val rootNode = mapper.readTree(
             restClient.get()

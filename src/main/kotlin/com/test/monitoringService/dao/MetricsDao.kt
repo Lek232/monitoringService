@@ -7,6 +7,10 @@ import org.springframework.stereotype.Component
 class MetricsDao(
     val jdbcTemplate: NamedParameterJdbcTemplate
 ) {
+
+    /**
+     * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
+     */
     fun getMetrics(serviceName: String): Map<String, Any> {
         val sql = """
         WITH last_minute_data AS (
