@@ -60,4 +60,9 @@ class MetricsEntity(
 
     @Column(name = "jdbc_connections_max", columnDefinition = "NUMERIC(3, 0)", nullable = false)
     var jdbcConnectionsMax: Long = 0,
+
+    /**
+     * Сюда ошибки при запросе мониторинга
+     */
+    var errorCollect: String = ""
 )

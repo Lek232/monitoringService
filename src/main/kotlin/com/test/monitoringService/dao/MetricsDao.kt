@@ -1,15 +1,23 @@
 package com.test.monitoringService.dao
 
+import com.test.monitoringService.component.telegramBot.BotProperties
+import jakarta.persistence.EntityManager
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 
 @Component
 class MetricsDao(
-    val jdbcTemplate: NamedParameterJdbcTemplate
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val entityManager: EntityManager
 ) {
 
     /**
      * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
+     *
+     *         entityManager.createNativeQuery(sql, IMetricResponse::class.java)
+     *             .setParameter("service_name", serviceName)
+     *
+     *             .singleResultOrNull as List<IMetricResponse>
      */
     fun getMetrics(serviceName: String): Map<String, Any> {
         val sql = """
@@ -48,6 +56,7 @@ class MetricsDao(
         CROSS JOIN first_record fr;
                 """.trimIndent()
 
+      val a =   entityManager.createQuery("", BotProperties::class.java).resultList
         val param = mapOf("service_name" to serviceName)
 
         return jdbcTemplate.query(sql, param) { rs, _ ->
@@ -63,5 +72,17 @@ class MetricsDao(
             )
         }.first()
     }
+}
+
+interface IMetricResponse {
+
+    fun getHealthStatus()
+    fun getDatabaseStatus()
+    fun getAvailability()
+    fun getMemoryLoad()
+    fun getCpuUsage()
+    fun getThreadsLive()
+    fun getDbLoad()
+    fun getConsumptionGrowth()
 }
 

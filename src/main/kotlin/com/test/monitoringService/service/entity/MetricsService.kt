@@ -9,4 +9,5 @@ class MetricsService(
     val dataRepository: MetricsEntityRepository
 ) {
     fun saveMetrics(data: MetricsEntity): MetricsEntity = dataRepository.save(data)
+    fun saveAllMetrics(data: List<MetricsEntity>): List<MetricsEntity> = dataRepository.saveAll(data)
 }

@@ -1,0 +1,10 @@
+telegram:
+  bot:
+    username: "monitoring333_bot"
+    token: "env"
+
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10

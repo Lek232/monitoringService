@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 
 // TODO нейминг, у нас DTO не может быть компонентом, переименуй в сервис наверное или в Usecase, будет корректнее
 @Component
-class FillMetricsReportDto(
+class FillMetricsReportUsecase(
     val metricsDao: MetricsDao
 ) {
     fun fillReportDto(services: List<String>): List<ReportMetricsDto> =

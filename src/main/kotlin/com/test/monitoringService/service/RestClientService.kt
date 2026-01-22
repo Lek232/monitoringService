@@ -1,5 +1,6 @@
 package com.test.monitoringService.service
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body

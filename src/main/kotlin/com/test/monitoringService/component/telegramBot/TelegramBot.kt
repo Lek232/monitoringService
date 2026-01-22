@@ -1,6 +1,7 @@
 package com.test.monitoringService.component.telegramBot
 
 import com.test.monitoringService.configuration.EnvServiceConfig
+import com.test.monitoringService.configuration.Service
 import com.test.monitoringService.service.TelegramSenderService
 import com.test.monitoringService.service.interfaces.TriggerInterface
 import com.test.monitoringService.service.report.MetricsReportService
@@ -15,13 +16,16 @@ import org.telegram.telegrambots.meta.api.objects.Update
 
 /**
  * TODO Необходимо сделать REST контроллер, для взаимодействия с сервисом, через телеграм хорошо, но нужно по HTTP ходить
+ *
+ * @ConditionalOnProperty("bot.telegram.enabled", havingValue = "true")
+ *
  */
 @Component
 class TelegramBot(
     val botProperties: BotProperties,
     val reportService: MetricsReportService,
     // Не тянем конфигурацию, тянем сразу список сервисов
-    fill: EnvServiceConfig,
+    fill:  List<Service>,
     val postgresReportService: PostgresReportService,
     private val triggerInterface: TriggerInterface,
     val senderService: TelegramSenderService,

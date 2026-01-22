@@ -1,8 +1,8 @@
 package com.test.monitoringService.service
 
-import com.test.monitoringService.configuration.EnvServiceConfig
 import com.test.monitoringService.component.filler.FillTiggerDto
 import com.test.monitoringService.component.telegramBot.TelegramBot
+import com.test.monitoringService.configuration.EnvServiceConfig
 import com.test.monitoringService.model.entity.MetricsEntity
 import com.test.monitoringService.service.entity.MetricsService
 import com.test.monitoringService.service.entity.PostgresService
@@ -28,7 +28,7 @@ class SchedulingService(
     val postgresEntityService: PostgresService,
     val triggerService: TriggerCheckService,
     val fillTiggerDto: FillTiggerDto,
-    val telegramBot: TelegramBot,
+    val telegramBot: TelegramBot?,
 ) {
     val services = fill.serviceConfig()
 
@@ -49,15 +49,39 @@ class SchedulingService(
              *  runCatching {
              *      *code
              *  }.onFailure { exception ->
-             *      when(exception) {
-             *          is IllegalArgumentException -> log
+             *     val message =  when(exception) {
+             *          is IllegalArgumentException -> "log1"
+             *          is HttpClientErrorException -> "log2"
              *          ...
              *      }
              *
-             *      metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
+             *      metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name, message))
              *
              *  }.getOrNull()
              *
+             *  *  runCatching {
+             *      *code
+             *  }.getOrElse { exception ->
+             *     val message =  when(exception) {
+             *          is IllegalArgumentException -> "log1"
+             *          is HttpClientErrorException -> "log2"
+             *          ...
+             *      }
+             *
+             *     MetricsEntity(serviceName = it.name, message)
+             *  }
+             *
+             *
+             *             runCatching {
+             *                 metricEntity
+             *             }.getOrElse { exception ->
+             *                 val message = when (exception) {
+             *                     is IllegalArgumentException -> "log1"
+             *                     is HttpClientErrorException -> "log2"
+             *                     else -> {"Неизвестная"}
+             *                 }
+             *                 MetricsEntity(serviceName = it.name)
+             *             }.let(metricsEntityService::saveMetrics)
              */
             try {
                 val metricDto = pollingMetrics.pollingMetrics(it.url, it.name, it.apiKey)
@@ -92,7 +116,7 @@ class SchedulingService(
 
     @Scheduled(fixedRate = 10_000)
     fun scheduledReport() {
-        telegramBot.sendReport()
+        telegramBot?.sendReport()
     }
 
     @Scheduled(initialDelay = 10_000, fixedRate = 10_000)

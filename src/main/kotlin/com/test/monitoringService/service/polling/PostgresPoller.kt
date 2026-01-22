@@ -15,6 +15,7 @@ class PostgresPoller(
         val postgres = mapper.readTree(
             response.getPostgres(url, apiKey)
         )
+
         return CreatePostgresMetricsEntityDto(
             serviceName = serviceName,
             totalQueries = postgres["total_queries"]?.asLong() ?: 0,

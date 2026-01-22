@@ -3,6 +3,8 @@ package com.test.monitoringService.configuration
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.io.File
 
@@ -11,9 +13,9 @@ data class Service(
     val url: String,
     val apiKey: String
 )
-
 @Configuration
-class EnvServiceConfig {
+class EnvServiceConfig(
+) {
 
     val log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -31,7 +33,7 @@ class EnvServiceConfig {
      *
      * @Setter
      * @Getter
-     * public class DadataToken {
+     * public class ServiceToken {
      *     private String name;
      *     private String apiKey;
      * }
@@ -57,23 +59,12 @@ class EnvServiceConfig {
             return
         }
 
-        val envFile = File(".env")
-        if (envFile.exists()) {
-            log.info("Найден .env файл")
-            envFile.readLines()
-                .filter { it.isNotBlank() && it.contains("=") }
-                .forEach { line ->
-                    val (key, value) = line.split("=", limit = 2)
-                    System.setProperty(key.trim(), value.trim())
-                }
-        } else {
-            log.warn("Не найден .env файл или переменная окружения")
-        }
     }
 
     /**
      * TODO сделай это бином, что бы сервисы возвращались
      */
+    @Bean
     fun serviceConfig(): List<Service> {
         val rawServices = System.getProperty("SERVICES", "")
 
