@@ -26,11 +26,8 @@ class TriggerEntity(
     @Column(name = "name", nullable = false, length = 100, unique = true)
     var name: String = "",
 
-    /**
-     * Должно быть not null
-     */
-    @Column(name = "service_name", length = 100)
-    var serviceName: String? = null,
+    @Column(name = "service_name", nullable = false, length = 100)
+    var serviceName: String = "all",
 
     @Enumerated(EnumType.STRING)
     @Column(name = "field", nullable = false, length = 30)

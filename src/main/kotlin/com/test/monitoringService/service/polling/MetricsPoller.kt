@@ -27,7 +27,6 @@ class MetricsPoller(
         val databaseStatus = when {
             healthNode["components"]?.has("db") == true ->
                 healthNode["components"]["db"]["status"].asString()
-
             else -> "Null"
         }
 

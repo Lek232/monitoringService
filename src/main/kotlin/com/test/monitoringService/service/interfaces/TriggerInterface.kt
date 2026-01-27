@@ -2,19 +2,13 @@ package com.test.monitoringService.service.interfaces
 
 interface TriggerInterface {
 
-    fun disableTrigger(chatId: String, triggerName: String)
-
-    fun enableTrigger(chatId: String, triggerName: String)
-
-    fun deleteTrigger(chatId: String, triggerName: String)
-
-    fun createTrigger(chatId: String, createParam: String)
-
-    fun editTrigger(chatId: String, triggerEdit: String)
-
-    fun showAllTriggersForService(chatId: String, serviceName: String)
-
-    fun showAllActiveTriggers(chatId: String)
-
-    fun showAllTriggers(chatId: String)
+    fun disableTrigger(triggerName: String): String
+    fun enableTrigger(triggerName: String): String
+    fun deleteTrigger(triggerName: String): String
+    fun createTrigger(createParam: String): String
+    fun editTrigger(triggerEditWithWhiteSpaces: String): String
+    fun showAllTriggersForService(serviceName: String): String
+    fun showAllActiveTriggers(): String
+    fun showAllTriggers(): String
+    fun notify(): String
 }

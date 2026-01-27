@@ -6,8 +6,8 @@ build/
 !**/src/test/**/build/
 
 ### Environment variables ###
-##.env
-##.env.*
+.env
+.env.*
 
 ### STS ###
 .apt_generated

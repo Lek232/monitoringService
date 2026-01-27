@@ -1,8 +1,8 @@
 package com.test.monitoringService.service
 
-import com.test.monitoringService.component.filler.FillTiggerDto
+import com.test.monitoringService.component.filler.FillTiggerUsecase
 import com.test.monitoringService.component.telegramBot.TelegramBot
-import com.test.monitoringService.configuration.EnvServiceConfig
+import com.test.monitoringService.configuration.ServiceConfig
 import com.test.monitoringService.model.entity.MetricsEntity
 import com.test.monitoringService.service.entity.MetricsService
 import com.test.monitoringService.service.entity.PostgresService
@@ -10,6 +10,7 @@ import com.test.monitoringService.service.polling.MetricsPoller
 import com.test.monitoringService.service.polling.PostgresPoller
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -21,16 +22,19 @@ import java.net.SocketException
 @Service
 @EnableScheduling
 class SchedulingService(
-    fill: EnvServiceConfig,
+    fill: List<ServiceConfig.Service>,
     val pollingMetrics: MetricsPoller,
     val metricsEntityService: MetricsService,
     val pollingPostgres: PostgresPoller,
     val postgresEntityService: PostgresService,
+    val fillTiggerDto: FillTiggerUsecase,
     val triggerService: TriggerCheckService,
-    val fillTiggerDto: FillTiggerDto,
-    val telegramBot: TelegramBot?,
+
+    @Autowired(required = false)
+    val telegramBot: TelegramBot? = null,
 ) {
-    val services = fill.serviceConfig()
+
+    val services = fill
 
     val serviceNamesList = services.map { it.name }
 
@@ -38,78 +42,30 @@ class SchedulingService(
 
     @Scheduled(fixedRate = 10_000)
     fun scheduledPolling() {
+
         log.info("Опрос сервисов: ${services.map { it.name }}")
 
-        // TODO если мы не ожидаем данные дальше, то используй forEach
-        services.map {
+        services.forEach {
 
-            /** TODO Если мы получаем ошибку, то можно вынести ее в finally
-             *  и можно использовать runCatching от kotlin, т.е.
-             *
-             *  runCatching {
-             *      *code
-             *  }.onFailure { exception ->
-             *     val message =  when(exception) {
-             *          is IllegalArgumentException -> "log1"
-             *          is HttpClientErrorException -> "log2"
-             *          ...
-             *      }
-             *
-             *      metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name, message))
-             *
-             *  }.getOrNull()
-             *
-             *  *  runCatching {
-             *      *code
-             *  }.getOrElse { exception ->
-             *     val message =  when(exception) {
-             *          is IllegalArgumentException -> "log1"
-             *          is HttpClientErrorException -> "log2"
-             *          ...
-             *      }
-             *
-             *     MetricsEntity(serviceName = it.name, message)
-             *  }
-             *
-             *
-             *             runCatching {
-             *                 metricEntity
-             *             }.getOrElse { exception ->
-             *                 val message = when (exception) {
-             *                     is IllegalArgumentException -> "log1"
-             *                     is HttpClientErrorException -> "log2"
-             *                     else -> {"Неизвестная"}
-             *                 }
-             *                 MetricsEntity(serviceName = it.name)
-             *             }.let(metricsEntityService::saveMetrics)
-             */
-            try {
-                val metricDto = pollingMetrics.pollingMetrics(it.url, it.name, it.apiKey)
-                val metricEntity = metricDto.toMetricsEntity()
+            runCatching {
+                val metricEntity = pollingMetrics.pollingMetrics(it.url, it.name, it.apiKey).toMetricsEntity()
                 metricsEntityService.saveMetrics(metricEntity)
-                if (metricDto.databaseName == "PostgreSQL" && metricDto.databaseStatus == "UP") {
-                    val postgresDto = pollingPostgres.pollingPostgres(it.name, it.url, it.apiKey)
-                    val postgresEntity = postgresDto.toPostgresEntity()
+                if (metricEntity.databaseName == "PostgreSQL" && metricEntity.databaseStatus == "UP") {
+                    val postgresEntity = pollingPostgres.pollingPostgres(it.name, it.url, it.apiKey).toPostgresEntity()
                     postgresEntityService.savePostgres(postgresEntity)
                 }
-            } catch (e: IllegalArgumentException) {
-                log.warn("Некорректный запрос для сервиса '${it.name}': ${e.message}")
-                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
-            } catch (e: HttpClientErrorException.Forbidden) {
-                log.warn("Неверный apiKey для сервиса: '${it.name}': ошибка ${e.message}")
-                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
-            } catch (e: HttpClientErrorException.NotFound) {
-                log.warn("Сервис не обнаружен: '${it.name}': ошибка ${e.message}")
-                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
-            } catch (e: SocketException) {
-                log.warn("Соединение было разорвано для сервиса: '${it.name}': ${e.message}")
-                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
-            } catch (e: ResourceAccessException) {
-                log.warn("Ошибка чтения: '${it.name}': ${e.message}")
-                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
-            } catch (e: HttpServerErrorException.ServiceUnavailable) {
-                log.warn("Сервис не доступен: '${it.name}': ${e.message}")
-                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name))
+            }.onFailure { e ->
+                val message = when (e) {
+                    is IllegalArgumentException -> "Некорректный запрос для сервиса '${it.name}': ${e.message}"
+                    is HttpClientErrorException.Forbidden -> "Неверный apiKey для сервиса: '${it.name}': ошибка ${e.message}"
+                    is HttpClientErrorException.NotFound -> "Сервис не обнаружен: '${it.name}': ошибка ${e.message}"
+                    is SocketException -> "Соединение было разорвано для сервиса: '${it.name}': ${e.message}"
+                    is ResourceAccessException -> "Ошибка чтения: '${it.name}': ${e.message}"
+                    is HttpServerErrorException.ServiceUnavailable -> "Сервис не доступен: '${it.name}': ${e.message}"
+                    else -> "Ошибка. Сервис: '${it.name}': ${e.message}"
+                    }
+                log.warn(message)
+                metricsEntityService.saveMetrics(MetricsEntity(serviceName = it.name, errorCollect = message))
             }
         }
     }

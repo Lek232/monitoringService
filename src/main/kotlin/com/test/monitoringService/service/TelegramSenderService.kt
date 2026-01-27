@@ -1,6 +1,7 @@
 package com.test.monitoringService.service
 
-import com.test.monitoringService.component.telegramBot.BotProperties
+import com.test.monitoringService.configuration.BotConfig
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
@@ -9,12 +10,15 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage
  * Необходимо сделать опциональным, что бы можно было включать или выключать сервис отправки, не везде есть доступ до Telegram
  */
 @Service
+@ConditionalOnProperty(
+    name = ["telegram.bot.enabled"],
+    havingValue = "true",
+    matchIfMissing = false
+)
 class TelegramSenderService(
-    val botProperties: BotProperties,
+    bot: BotConfig.BotProperties,
 ) {
-    val telegramClient = OkHttpTelegramClient(getBotToken())
-
-    fun getBotToken() = botProperties.token
+    val telegramClient = OkHttpTelegramClient(bot.token)
 
     fun sendMessage(chatId: String, text: String) {
         val message = SendMessage.builder()

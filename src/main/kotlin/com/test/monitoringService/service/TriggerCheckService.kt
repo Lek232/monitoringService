@@ -1,14 +1,17 @@
 package com.test.monitoringService.service
 
 import com.test.monitoringService.component.telegramBot.TelegramBot
+import com.test.monitoringService.model.dto.NotificationsDto
 import com.test.monitoringService.model.dto.TriggerDto
 import com.test.monitoringService.model.entity.FieldType
 import com.test.monitoringService.model.entity.TriggerEntity
 import com.test.monitoringService.model.entity.TriggerField
 import com.test.monitoringService.model.entity.TriggerOperator
+import com.test.monitoringService.repository.interfaces.NotificationsRepository
 import com.test.monitoringService.repository.interfaces.TriggerRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -17,7 +20,10 @@ import java.time.ZoneOffset
 @Service
 class TriggerCheckService(
     val triggerRepository: TriggerRepository,
-    val telegramBot: TelegramBot,
+    val notificationsRepository: NotificationsRepository,
+
+    @Autowired(required = false)
+    val telegramBot: TelegramBot? = null,
 ) {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -89,16 +95,19 @@ class TriggerCheckService(
         trigger.lastTriggered = OffsetDateTime.now(ZoneOffset.UTC)
         triggerRepository.save(trigger)
 
-        val message = createAlertMessage(trigger, dto)
-
-        telegramBot.sendAlert(message)
-    }
-
-    private fun createAlertMessage(trigger: TriggerEntity, dto: TriggerDto): String {
         val valueStr = when (val value = getFieldValue(trigger.metric, dto)) {
             FieldType.NUMERIC -> String.format("%.2f", value)
             else -> value.toString()
         }
+
+        val message = createAlertMessage(valueStr, trigger, dto)
+
+        notificationsRepository.save(writeNotifications(valueStr, trigger, dto).toNotificationsEntity())
+
+        telegramBot?.sendAlert(message)
+    }
+
+    private fun createAlertMessage(valueStr: String, trigger: TriggerEntity, dto: TriggerDto): String {
         return """
             Оповещение: ${trigger.name}
             Сервис: ${dto.serviceName}
@@ -113,5 +122,22 @@ class TriggerCheckService(
             - CPU: ${String.format("%.2f", dto.cpuUsage)}%
             - Memory: ${String.format("%.2f", dto.memoryLoad)}%
         """.trimIndent()
+    }
+
+    fun writeNotifications (valueStr: String, trigger: TriggerEntity, dto: TriggerDto): NotificationsDto {
+        return NotificationsDto(
+            triggerName = trigger.name,
+            serviceName = dto.serviceName,
+            triggerMetricName = trigger.metric.name,
+            triggerOperatorName = trigger.operator.name,
+            triggerThreshold = trigger.threshold,
+            currentValue = valueStr,
+            time = OffsetDateTime.now(ZoneOffset.UTC).withNano(0),
+            healthStatus = dto.healthStatus,
+            databaseStatus = dto.databaseStatus,
+            availability = String.format("%.2f", if (dto.availability > 100) 100.0 else dto.availability),
+            cpuUsage = String.format("%.2f", dto.cpuUsage),
+            memory = String.format("%.2f", dto.memoryLoad),
+        )
     }
 }

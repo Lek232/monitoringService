@@ -1,13 +1,14 @@
 package com.test.monitoringService.component.telegramBot
 
-import com.test.monitoringService.configuration.EnvServiceConfig
-import com.test.monitoringService.configuration.Service
+import com.test.monitoringService.configuration.BotConfig
+import com.test.monitoringService.configuration.ServiceConfig
 import com.test.monitoringService.service.TelegramSenderService
 import com.test.monitoringService.service.interfaces.TriggerInterface
 import com.test.monitoringService.service.report.MetricsReportService
 import com.test.monitoringService.service.report.PostgresReportService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
@@ -20,27 +21,35 @@ import org.telegram.telegrambots.meta.api.objects.Update
  * @ConditionalOnProperty("bot.telegram.enabled", havingValue = "true")
  *
  */
+
 @Component
+@ConditionalOnProperty(
+    name = ["telegram.bot.enabled"],
+    havingValue = "true",
+    matchIfMissing = false
+)
 class TelegramBot(
-    val botProperties: BotProperties,
+    val bot: BotConfig.BotProperties,
     val reportService: MetricsReportService,
-    // Не тянем конфигурацию, тянем сразу список сервисов
-    fill:  List<Service>,
+    services:  List<ServiceConfig.Service>,
     val postgresReportService: PostgresReportService,
-    private val triggerInterface: TriggerInterface,
+    val triggerInterface: TriggerInterface,
     val senderService: TelegramSenderService,
 ) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
-
-    val servicesList = fill.serviceConfig().map { it.name }
-
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+
+    init {
+        log.info("TelegramBot enabled")
+    }
+
+    val servicesList = services.map { it.name }
 
     private val reportChatIds = mutableSetOf<String>()
 
     private val alertChatIds = mutableSetOf<String>()
 
-    override fun getBotToken() = botProperties.token
+    override fun getBotToken() = bot.token
 
     override fun getUpdatesConsumer(): LongPollingUpdateConsumer {
         return this
@@ -131,45 +140,45 @@ class TelegramBot(
             }
 
             "/all" -> {
-                triggerInterface.showAllTriggers(chatId)
+                senderService.sendMessage(chatId,triggerInterface.showAllTriggers())
             }
 
             "/allActive" -> {
-                triggerInterface.showAllActiveTriggers(chatId)
+                senderService.sendMessage(chatId,triggerInterface.showAllActiveTriggers())
             }
 
             else -> {
                 when {
                     messageText.startsWith("/enable_") -> {
                         val triggerName = messageText.substringAfter("_")
-                        triggerInterface.enableTrigger(chatId, triggerName)
+                        senderService.sendMessage(chatId,triggerInterface.enableTrigger(triggerName))
                         alertChatIds.add(chatId)
                     }
 
                     messageText.startsWith("/disable_") -> {
                         val triggerName = messageText.substringAfter("_")
-                        triggerInterface.disableTrigger(chatId, triggerName)
+                        senderService.sendMessage(chatId,triggerInterface.disableTrigger(triggerName))
                     }
 
                     messageText.startsWith("/create_") -> {
                         val createParam = messageText.substringAfter("_")
-                        triggerInterface.createTrigger(chatId, createParam)
+                        senderService.sendMessage(chatId,triggerInterface.createTrigger(createParam))
                         alertChatIds.add(chatId)
                     }
 
                     messageText.startsWith("/edit_") -> {
                         val triggerParam = messageText.substringAfter("_")
-                        triggerInterface.editTrigger(chatId, triggerParam)
+                        senderService.sendMessage(chatId,triggerInterface.editTrigger(triggerParam))
                     }
 
                     messageText.startsWith("/delete_") -> {
                         val triggerName = messageText.substringAfter("_")
-                        triggerInterface.deleteTrigger(chatId, triggerName)
+                        senderService.sendMessage(chatId,triggerInterface.deleteTrigger(triggerName))
                     }
 
                     messageText.startsWith("/allForService_") -> {
                         val serviceName = messageText.substringAfter("_")
-                        triggerInterface.showAllTriggersForService(chatId, serviceName)
+                        senderService.sendMessage(chatId,triggerInterface.showAllTriggersForService(serviceName))
                     }
 
                     else -> {
@@ -233,40 +242,40 @@ class TelegramBot(
  AVG_CACHE_HIT - попадание в кэш %
 
 *Операторы для чисел:*
-EQ - равно
-NE - не равно  
-GT - больше
-LT - меньше
-GTE - больше или равно
-LTE - меньше или равно
+ EQ - равно
+ NE - не равно  
+ GT - больше
+ LT - меньше
+ GTE - больше или равно
+ LTE - меньше или равно
 
 *Операторы для текста:*
-CONTAINS - содержит
-NOT_CONTAINS - не содержит
+ CONTAINS - содержит
+ NOT_CONTAINS - не содержит
 
 *Пример создания триггера:*
-```
-Имя триггера: triggerName !!! Имя должно быть уникальным !!!
-Сервис: serviceName или пустое для триггера по всем сервисам
-Метрика: CPU_USAGE
-Оператор: GT
-Порог: 80
-Cooldown: 5
-```
+ ```
+ Имя триггера: triggerName !!! Имя должно быть уникальным !!!
+ Сервис: serviceName или all для триггера по всем сервисам
+ Метрика: CPU_USAGE
+ Оператор: GT
+ Порог: 80
+ Cooldown: 5
+ ```
 
 *Формат команды создания:*
-[create_{triggerName};{сервис};{метрика};{оператор};{порог};{cooldown}]
+ [create_{triggerName},{сервис},{метрика},{оператор},{порог},{cooldown}]
 
 *Пример:*
-[/create_triggerName;serviceName;CPU_USAGE;GT;80;5]
+ [/create_triggerName,serviceName,CPU_USAGE,GT,80,5]
 
 *Пример изменения триггера:*
 
 *Формат команды изменения:*
-[edit_name:{triggerName};operator:{оператор};threshold:{порог};cooldown:{cooldown}]
+ [edit_name:{triggerName},operator:{оператор},threshold:{порог},cooldown:{cooldown}]
 
 *Пример:*
-[/edit_name:triggerName;operator:GT;threshold:90;cooldown:5]
+ [/edit_name:triggerName,operator:GT,threshold:90,cooldown:5]
 
 *Можно указывать конкретные поля, которые нужно изменить. Имя триггера, сервис, метрика, не изменяются
 *Имя указывается обязательно*

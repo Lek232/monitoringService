@@ -1,11 +1,11 @@
 package com.test.monitoringService.service.report
 
-import com.test.monitoringService.component.filler.FillPostgresReportDto
+import com.test.monitoringService.component.filler.FillPostgresReportUsecase
 import org.springframework.stereotype.Service
 
 @Service
 class PostgresReportService(
-    val fillPostgresReport: FillPostgresReportDto,
+    val fillPostgresReport: FillPostgresReportUsecase,
 ) {
     fun generateHtmlPostgres(services: List<String>): String {
         val reportDataList = fillPostgresReport.fillReportDto(services).filter { it.serviceName.isNotEmpty() }

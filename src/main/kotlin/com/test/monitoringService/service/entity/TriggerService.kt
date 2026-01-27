@@ -5,8 +5,8 @@ import com.test.monitoringService.model.entity.TriggerEntity
 import com.test.monitoringService.model.entity.TriggerField
 import com.test.monitoringService.model.entity.TriggerOperator
 import com.test.monitoringService.repository.interfaces.MetricsEntityRepository
+import com.test.monitoringService.repository.interfaces.NotificationsRepository
 import com.test.monitoringService.repository.interfaces.TriggerRepository
-import com.test.monitoringService.service.TelegramSenderService
 import com.test.monitoringService.service.interfaces.TriggerInterface
 import jakarta.transaction.Transactional
 import org.slf4j.Logger
@@ -17,87 +17,76 @@ import org.springframework.stereotype.Service
 @Service
 class TriggerService(
     val triggerRepository: TriggerRepository,
-    val messageService: TelegramSenderService,
+    val notificationsRepository: NotificationsRepository,
     val metricsRepository: MetricsEntityRepository
 ) : TriggerInterface {
 
     val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    override fun disableTrigger(chatId: String, triggerName: String) {
-        val trigger: TriggerEntity? = triggerRepository.findByName(triggerName)
-        if (trigger == null) {
-            messageService.sendMessage(chatId, "Триггер с именем $triggerName не найден")
-            return
-        }
+    override fun disableTrigger(triggerName: String): String {
+        val trigger: TriggerEntity =
+            triggerRepository.findByName(triggerName) ?: return "Триггер с именем $triggerName не найден"
         trigger.enabled = false
         triggerRepository.save(trigger)
-        messageService.sendMessage(chatId, "Триггер с именем $triggerName отключен")
+        return "Триггер с именем $triggerName отключен"
     }
 
-    override fun enableTrigger(chatId: String, triggerName: String) {
-        val trigger: TriggerEntity? = triggerRepository.findByName(triggerName)
-        if (trigger == null) {
-            messageService.sendMessage(chatId, "Триггер с именем $triggerName не найден")
-            return
-        }
+    override fun enableTrigger(triggerName: String): String {
+        val trigger: TriggerEntity =
+            triggerRepository.findByName(triggerName) ?: return "Триггер с именем $triggerName не найден"
         trigger.enabled = true
         triggerRepository.save(trigger)
-        messageService.sendMessage(chatId, "Триггер с именем $triggerName активирован")
+        return "Триггер с именем $triggerName активирован"
     }
 
     @Transactional
-    override fun deleteTrigger(chatId: String, triggerName: String) {
-        if (triggerRepository.deleteByName(triggerName) == 0)
-            messageService.sendMessage(chatId, "Триггер $triggerName не был обнаружен")
+    override fun deleteTrigger(triggerName: String): String {
+
+        return if (triggerRepository.deleteByName(triggerName) == 0)
+            "Триггер $triggerName не был обнаружен"
         else
-            messageService.sendMessage(chatId, "Триггер $triggerName был удален")
+            "Триггер $triggerName был удален"
     }
 
     @Transactional
-    override fun createTrigger(chatId: String, createParam: String) {
+    override fun createTrigger(createParam: String): String {
         try {
-            val param = createParam.split(";")
+            val param = createParam.replace(" ", "").split(",")
             if (param.size != 6) {
-                messageService.sendMessage(chatId, "Заданы не все необходимые параметры. Пример:\n" +
-                        "/create_triggerName;serviceName;CPU_USAGE;GT;80;5")
-                return
+                println(param)
+                return "Заданы не все необходимые параметры. Пример:\n" +
+                        "/create_triggerName,serviceName,CPU_USAGE,GT,80,5"
             }
             val name = param[0]
-            val serviceName = param[1].ifBlank { null }
+            val serviceName = param[1].ifBlank { "all" }
             val metric = TriggerField.valueOf(param[2])
             val operator = TriggerOperator.valueOf(param[3])
             val threshold = param[4]
             val cooldown = param[5].toInt()
 
-            if(serviceName != null && metricsRepository.findFirstByServiceName(serviceName).serviceName.isEmpty()){
-                messageService.sendMessage(chatId, "Сервис с именем $serviceName не существует")
-                return
+            if(serviceName != "all" && metricsRepository.findFirstByServiceName(serviceName).serviceName.isEmpty()){
+                return "Сервис с именем $serviceName не существует"
             }
 
-            if(triggerRepository.findByName(name) != null){
-                messageService.sendMessage(chatId, "Триггер с именем $name уже существует")
-                return
+            if(serviceName != "all" && triggerRepository.findByName(name) != null){
+                return "Триггер с именем $name уже существует"
             }
 
-            if (serviceName != null && metric.belongs == TriggerField.FieldBelongsDb.TRUE && checkDatabase(serviceName)) {
-                messageService.sendMessage(chatId, "У сервиса нет базы данных")
-                return
+            if (metric.belongs == TriggerField.FieldBelongsDb.TRUE && checkDatabase(serviceName)) {
+                return "У сервиса нет базы данных"
             }
 
             when {
                 metric.type != operator.type -> {
-                    messageService.sendMessage(chatId, "Метрика и оператор должны быть одного типа")
-                    return
+                    return "Метрика и оператор должны быть одного типа"
                 }
 
                 metric.type == FieldType.TEXT && threshold.isNumber() || metric.type == FieldType.NUMERIC && !threshold.isNumber() -> {
-                    messageService.sendMessage(chatId, "Метрика и порог должны быть одного типа")
-                    return
+                    return "Метрика и порог должны быть одного типа"
                 }
 
                 operator.type == FieldType.TEXT && threshold.isNumber() || operator.type == FieldType.NUMERIC && !threshold.isNumber() -> {
-                    messageService.sendMessage(chatId, "Оператор и порог должны быть одного типа")
-                    return
+                    return "Оператор и порог должны быть одного типа"
                 }
             }
 
@@ -111,39 +100,37 @@ class TriggerService(
             )
 
             val saved = triggerRepository.save(trigger)
-            messageService.sendMessage(
-                chatId, """
+            return  """ 
                     *Триггер создан и активирован успешно*
+                    ------------------------------------
                     ID: ${saved.id}
                     Название: ${saved.name}
-                    Сервис: ${saved.serviceName ?: "Все"}
+                    Сервис: ${if (saved.serviceName != "all") saved.serviceName else "Все"}
                     Условие: ${saved.metric} ${saved.operator} ${saved.threshold}
                     Cooldown: ${saved.cooldownMinutes} мин
                     Используйте /disable_${saved.name} чтобы выключить
+                    ------------------------------------
                     """.trimIndent()
-            )
+
         } catch (e: IllegalArgumentException) {
-            messageService.sendMessage(chatId, "Ошибка: ${e.message}. Проверьте правильность ввода")
+            return "Ошибка: ${e.message}. Проверьте правильность ввода"
         } catch (_: EmptyResultDataAccessException) {
-            messageService.sendMessage(chatId, "Сервиса с таким именем не существует")
+            return "Сервиса с таким именем не существует"
         } catch (e: Exception) {
             log.warn( "Ошибка при создании триггера: ${e.message}")
         }
+        return ""
     }
 
-    override fun editTrigger(chatId: String, triggerEdit: String) {
+    override fun editTrigger(triggerEditWithWhiteSpaces: String): String {
         try {
-            val triggerName = triggerEdit.substringAfter("name:").substringBefore(";")
+            val triggerEdit = triggerEditWithWhiteSpaces.replace(" ", "")
+            val triggerName = triggerEdit.substringAfter("name:").substringBefore(",")
             val operator = triggerEdit.extractValue("operator:")?.let { TriggerOperator.valueOf(it) }
             val threshold = triggerEdit.extractValue("threshold:")
             val cooldown = triggerEdit.extractValue("cooldown:")
 
-            val trigger = triggerRepository.findByName(triggerName)
-
-            if (trigger == null) {
-                messageService.sendMessage(chatId, "Триггер с именем $triggerName не найден")
-                return
-            }
+            val trigger = triggerRepository.findByName(triggerName) ?: return "Триггер с именем $triggerName не найден"
 
             run block@{
                 when {
@@ -152,8 +139,7 @@ class TriggerService(
                     }
 
                     operator.type != trigger.operator.type -> {
-                        messageService.sendMessage(chatId, "Оператор не может менять тип")
-                        return
+                        return "Оператор не может менять тип"
                     }
 
                     threshold == null -> {
@@ -161,111 +147,131 @@ class TriggerService(
                     }
 
                     threshold.isNumber() && !trigger.threshold.isNumber() -> {
-                        messageService.sendMessage(chatId, "Порог не может менять тип")
-                        return
+                        return "Порог не может менять тип"
                     }
 
                     !threshold.isNumber() && trigger.threshold.isNumber() -> {
-                        messageService.sendMessage(chatId, "Порог не может менять тип")
-                        return
+                        return "Порог не может менять тип"
                     }
 
                     operator.type == FieldType.TEXT && threshold.isNumber() -> {
-                        messageService.sendMessage(chatId, "Оператор и порог должны быть одного типа")
-                        return
+                        return "Оператор и порог должны быть одного типа"
                     }
 
                     operator.type == FieldType.NUMERIC && !threshold.isNumber() -> {
-                        messageService.sendMessage(chatId, "Оператор и порог должны быть одного типа")
-                        return
+                        return "Оператор и порог должны быть одного типа"
                     }
                 }
             }
 
             if( cooldown == null && threshold == null && operator == null ) {
-                messageService.sendMessage(chatId, "Не заданы параметры для изменения. Пример:\n" +
-                        "/edit_name:triggerName;operator:GT;threshold:90;cooldown:5")
-                return
+                return "Не заданы параметры для изменения. Пример:\n" +
+                        "/edit_name:triggerName,operator:GT,threshold:90,cooldown:5"
             }
 
             operator?.let { trigger.operator = operator }
             threshold?.let { trigger.threshold = threshold }
             cooldown?.let { trigger.cooldownMinutes = cooldown.toInt() }
             val updated = triggerRepository.save(trigger)
-            messageService.sendMessage(
-                chatId, """
+            return  """ 
                     *Триггер был изменен и теперь выглядит так*
+                    ------------------------------------
                     ID: ${updated.id}
                     Название: ${updated.name}
-                    Сервис: ${updated.serviceName ?: "Все"}
+                    Сервис: ${if (updated.serviceName != "all") updated.serviceName else "Все"}
                     Условие: ${updated.metric} ${updated.operator} ${updated.threshold}
                     Cooldown: ${updated.cooldownMinutes} мин
+                    ------------------------------------
                     """.trimIndent()
-            )
         } catch (e: Exception) {
             log.warn( "Ошибка при изменении триггера: ${e.message}")
         }
+        return ""
     }
 
-    override fun showAllTriggersForService(chatId: String, serviceName: String) {
+    override fun showAllTriggersForService(serviceName: String): String {
         val triggers = triggerRepository.findActiveTriggers(serviceName)
         if (triggers.isEmpty()) {
-            messageService.sendMessage(chatId, "Активных триггеров для сервиса $serviceName не обнаружено")
-            return
+            return "Активных триггеров для сервиса $serviceName не обнаружено"
         }
-        messageService.sendMessage(chatId, "Все активные триггеры для сервиса $serviceName:")
+        return "Все активные триггеры для сервиса $serviceName:\n------------------------------------\n" +
         triggers.map {
-            messageService.sendMessage(
-                chatId, """
+            "\n" +
+                    """   
                     ID: ${it.id}
                     Название: ${it.name}
-                    Сервис: ${it.serviceName ?: "Все"}
+                    Сервис: ${if(it.serviceName != "all") it.serviceName  else "Все"}
                     Условие: ${it.metric} ${it.operator} ${it.threshold}
                     Cooldown: ${it.cooldownMinutes} мин
-                    """.trimIndent()
-            )
+                    ------------------------------------
+                    """.trimIndent() + "\n"
         }
     }
 
-    override fun showAllActiveTriggers(chatId: String) {
+    override fun showAllActiveTriggers(): String {
         val triggers = triggerRepository.findByEnabledTrue()
         if (triggers.isEmpty()) {
-            messageService.sendMessage(chatId, "Активных триггеров не обнаружено")
-            return
+            return "Активных триггеров не обнаружено"
         }
-        messageService.sendMessage(chatId, "Все активные триггеры:")
+        return "Все активные триггеры:\n------------------------------------\n" +
         triggers.map {
-            messageService.sendMessage(
-                chatId, """
+            "\n" +
+                    """
                     ID: ${it.id}
                     Название: ${it.name}
-                    Сервис: ${it.serviceName ?: "Все"}
+                    Сервис: ${if (it.serviceName != "all") it.serviceName else "Все"}
                     Условие: ${it.metric} ${it.operator} ${it.threshold}
                     Cooldown: ${it.cooldownMinutes} мин
-                    """.trimIndent()
-            )
+                    ------------------------------------
+                    """.trimIndent() + "\n"
         }
     }
 
-    override fun showAllTriggers(chatId: String) {
+    override fun showAllTriggers(): String {
         val triggers = triggerRepository.findAll()
         if (triggers.isEmpty()) {
-            messageService.sendMessage(chatId, "Никаких триггеров не обнаружено")
-            return
+            return "Никаких триггеров не обнаружено"
         }
-        messageService.sendMessage(chatId, "Все триггеры:")
+        return "Все триггеры:\n------------------------------------\n" +
         triggers.map {
-            messageService.sendMessage(
-                chatId, """
+            "\n" +
+                    """ 
                     ID: ${it.id}
                     Название: ${it.name}
-                    Сервис: ${it.serviceName ?: "Все"}
+                    Сервис: ${if (it.serviceName != "all") it.serviceName else "Все"}
                     Условие: ${it.metric} ${it.operator} ${it.threshold}
                     Cooldown: ${it.cooldownMinutes} мин
                     Активен: ${it.enabled}
-                    """.trimIndent()
-            )
-        }
+                    ------------------------------------
+                    """.trimIndent() + "\n"
+        }.toString()
+    }
+
+    override fun notify(): String {
+        val notify = notificationsRepository.getLast()
+        if (notify.isEmpty())
+            return "Нет уведомлений от триггеров"
+        return "Сработавшие триггеры:\n------------------------------------\n" +
+        notify.map {
+            "\n" +
+                    """
+                    <pre>
+                    Оповещение: ${it.triggerName}
+                    Сервис: ${it.serviceName}
+                    Условие: ${it.triggerMetricName} ${it.triggerOperatorName} ${it.triggerThreshold}
+                    Текущее значение: ${it.currentValue}
+                    Time: ${it.time}
+                    
+                    Статус сервиса:
+                    - Health: ${it.healthStatus}
+                    - Database: ${it.databaseStatus}
+                    - Availability: ${it.availability}%
+                    - CPU: ${it.cpuUsage}%
+                    - Memory: ${it.memory}%
+                    ------------------------------------
+                    </pre>
+        """.trimIndent()
+        }.toString()
     }
 
     private fun String.extractValue(key: String): String? {

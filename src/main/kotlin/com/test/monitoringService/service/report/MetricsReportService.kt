@@ -1,13 +1,13 @@
 package com.test.monitoringService.service.report
 
-import com.test.monitoringService.component.filler.FillMetricsReportDto
+import com.test.monitoringService.component.filler.FillMetricsReportUsecase
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Service
 class MetricsReportService(
-    val fillMetricsReport: FillMetricsReportDto,
+    val fillMetricsReport: FillMetricsReportUsecase,
 ) {
     fun generateHtmlMetrics(services: List<String>): String {
         val reportDataList = fillMetricsReport.fillReportDto(services)
