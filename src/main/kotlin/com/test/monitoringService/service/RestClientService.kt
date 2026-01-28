@@ -6,6 +6,13 @@ import com.test.monitoringService.model.dto.GetPostgresMetricsDto
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 
+/**
+ * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
+ */
+/**
+ * TODO Вместо .body(String::class.java) Необходимо определить интерфейс который мы ожидаем и который будем маппить
+ */
+
 @Service
 class RestClientService {
 
@@ -20,9 +27,6 @@ class RestClientService {
             .body(Health::class.java)
             ?: Health()
 
-    /**
-     * TODO Вместо .body(String::class.java) Необходимо определить интерфейс который мы ожидаем и который будем маппить
-     */
     fun getMetric(serviceUrl: String, metric: String, statistic: String, apiKey: String): Double {
         val metric = restClient.get()
             .uri("${serviceUrl}/actuator/metrics/${metric}")

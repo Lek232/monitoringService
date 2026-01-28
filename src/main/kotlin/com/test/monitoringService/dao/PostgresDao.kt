@@ -9,10 +9,6 @@ import java.math.BigDecimal
 class PostgresDao(
     val entityManager: EntityManager
 ) {
-
-    /**
-     * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
-     */
     fun getPostgres(serviceName: String): ReportPostgresDto {
         val sql = """
         SELECT 
@@ -52,13 +48,3 @@ data class PostgresQueryToReport(
     val maxStddevExecTimeMs: BigDecimal?,
     val avgCacheHit: BigDecimal?,
 )
-//interface IPostgresResponse {
-//
-//    fun getServiceName(): String
-//    fun getTotalQueries(): Long
-//    fun getTotalCalls(): Long
-//    fun getMaxTotalTimeMs(): Double
-//    fun getAvgExecTimeMs(): Double
-//    fun getMaxStddevExecTimeMs(): Double
-//    fun getAvgCacheHit(): Double
-//}

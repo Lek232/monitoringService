@@ -2,6 +2,7 @@ package com.test.monitoringService.component.filler
 
 import com.test.monitoringService.dao.MetricsDao
 import com.test.monitoringService.dao.PostgresDao
+import com.test.monitoringService.model.dto.ReportMetricsDto
 import com.test.monitoringService.model.dto.TriggerDto
 import org.springframework.stereotype.Component
 
@@ -14,6 +15,9 @@ class FillTiggerUsecase(
         services.map {
             val metrics = metricsDao.getMetrics(it)
             val postgres = postgresDao.getPostgres(it)
+            if (metrics.healthStatus == "UNKNOWN") {
+                TriggerDto(serviceName = it)
+            }
             TriggerDto(
                 serviceName = it,
                 healthStatus = metrics.healthStatus,

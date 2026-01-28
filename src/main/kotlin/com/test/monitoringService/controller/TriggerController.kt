@@ -2,8 +2,11 @@ package com.test.monitoringService.controller
 
 
 import com.test.monitoringService.service.interfaces.TriggerInterface
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -28,27 +31,27 @@ class TriggerController(
         return htmlWrap(triggerInterface.showAllTriggersForService(serviceName))
     }
 
-    @GetMapping("/create_{createParam}")
+    @PostMapping("/create_{createParam}")
     fun createTrigger(@PathVariable createParam: String): String {
         return htmlWrap(triggerInterface.createTrigger(createParam))
     }
 
-    @GetMapping("/disable_{triggerName}")
+    @PutMapping("/disable_{triggerName}")
     fun disableTrigger(@PathVariable triggerName: String): String {
         return htmlWrap(triggerInterface.disableTrigger(triggerName))
     }
 
-    @GetMapping("/enable_{triggerName}")
+    @PutMapping("/enable_{triggerName}")
     fun enableTrigger(@PathVariable triggerName: String): String {
         return htmlWrap(triggerInterface.enableTrigger(triggerName))
     }
 
-    @GetMapping("/delete_{triggerName}")
+    @DeleteMapping("/delete_{triggerName}")
     fun deleteTrigger(@PathVariable triggerName: String): String {
         return htmlWrap(triggerInterface.deleteTrigger(triggerName))
     }
 
-    @GetMapping("/edit_{triggerName}")
+    @PutMapping("/edit_{triggerName}")
     fun editTrigger(@PathVariable triggerName: String): String {
         return htmlWrap(triggerInterface.editTrigger(triggerName))
     }

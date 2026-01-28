@@ -10,7 +10,7 @@ class MetricsPoller(
 ) {
 
     fun pollingMetrics(url: String, serviceName: String, apiKey: String): CreateMetricsEntityDto {
-// TODO Маппим не в дерево, а в DTO
+
         val health = response.getHealth(url, apiKey)
 
         val healthStatus = health.status

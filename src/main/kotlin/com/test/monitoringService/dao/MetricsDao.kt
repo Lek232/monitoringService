@@ -5,18 +5,19 @@ import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
+/**
+ * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
+ *
+ *         entityManager.createNativeQuery(sql, IMetricResponse::class.java)
+ *             .setParameter("service_name", serviceName)
+ *
+ *             .singleResultOrNull as List<IMetricResponse>
+ */
+
 @Component
 class MetricsDao(
     val entityManager: EntityManager
 ) {
-
-    /**
-     * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
-     *
-     *         entityManager.createNativeQuery(sql, IMetricResponse::class.java)
-     *             .setParameter("service_name", serviceName)
-     *             .singleResultOrNull as List<IMetricResponse>
-     */
     fun getMetrics(serviceName: String): ReportMetricsDto {
         val sql = """
             WITH last_minute_data AS (
@@ -90,15 +91,4 @@ data class MetricsQueryToReport(
     val dbLoad: BigDecimal,
     val consumptionDifference: BigDecimal,
 )
-
-//interface IMetricResponse {
-//    fun getHealthStatus(): String?
-//    fun getDatabaseStatus(): String?
-//    fun getAvailability(): Double?
-//    fun getMemoryLoad(): Double?
-//    fun getCpuUsage(): Double?
-//    fun getThreadsLive(): Int?
-//    fun getDbLoad(): Double?
-//    fun getConsumptionDifference(): Int?
-//}
 

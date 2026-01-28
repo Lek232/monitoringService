@@ -33,7 +33,6 @@ class SchedulingService(
     @Autowired(required = false)
     val telegramBot: TelegramBot? = null,
 ) {
-
     val services = fill
 
     val serviceNamesList = services.map { it.name }
