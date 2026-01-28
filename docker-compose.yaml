@@ -37,7 +37,6 @@ services:
       SPRING_SQL_INIT_MODE: "always"
       SPRING_JPA_OPEN_IN_VIEW: "false"
       SPRING_PROFILES_ACTIVE: "docker"
-      SERVICES: ${SERVICES}
 
     ports:
       - "8080:8080"
