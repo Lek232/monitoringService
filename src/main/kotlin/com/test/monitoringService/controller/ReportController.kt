@@ -23,25 +23,13 @@ class ReportController(
     @GetMapping("/postgres")
     fun getPostgresReportHtml(): String {
         log.info("Запрошен отчет по SQL запросам")
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            ${postgresReportService.generateHtmlPostgres(servicesList)}
-            </div>"""
+        return htmlWrap(postgresReportService.generateHtmlPostgres(servicesList))
     }
 
     @GetMapping("/report")
     fun getMetricsReportHtml(): String {
         log.info("Запрошен отчет по метрикам")
-        return """<div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            ${reportService.generateHtmlMetrics(servicesList)}
-            </div>"""
+        return htmlWrap(reportService.generateHtmlMetrics(servicesList))
     }
 
     @GetMapping("/help")
@@ -51,13 +39,7 @@ class ReportController(
     }
 
     fun showHelp(): String {
-        return """ 
-            <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
+        return htmlWrap(""" 
             Команды:
                 /postgres - отчет по SQL запросам\n
                 /report - получить отчет сейчас\n
@@ -127,8 +109,18 @@ class ReportController(
                 
                 *Можно указывать конкретные поля, которые нужно изменить. Имя триггера, сервис, метрика, не изменяются
                 *Имя указывается обязательно*
-            </pre>
-            </div>
-            """
+            """)
+    }
+
+    fun htmlWrap(text: String): String{
+        return """ <div style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            ">
+            <pre>
+$text
+            <pre>
+            </div>""".trimIndent()
     }
 }

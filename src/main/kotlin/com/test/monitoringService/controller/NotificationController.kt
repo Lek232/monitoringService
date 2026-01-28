@@ -14,14 +14,18 @@ class NotificationController(
 
     @GetMapping("/notifications")
     fun getNotifications (): String{
+        return htmlWrap(triggerInterface.notify())
+    }
+
+    fun htmlWrap(text: String): String{
         return """ <div style="
             display: flex;
             justify-content: center;
             align-items: center;
             ">
             <pre>
-${triggerInterface.notify()}
-            </pre>
+$text
+            <pre>
             </div>""".trimIndent()
     }
 }

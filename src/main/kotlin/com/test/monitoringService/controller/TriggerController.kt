@@ -15,104 +15,52 @@ class TriggerController(
 
     @GetMapping("/all")
     fun getAllTriggers():String{
-       return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.showAllTriggers()}
-            </pre>
-            </div>""".trimIndent()
+       return htmlWrap(triggerInterface.showAllTriggers())
     }
 
     @GetMapping("/allActive")
     fun getAllActiveTriggers():String{
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.showAllActiveTriggers()}
-            </pre>
-            </div>""".trimIndent()
+        return htmlWrap(triggerInterface.showAllActiveTriggers())
     }
 
     @GetMapping("/allForService_{serviceName}")
     fun getAllTriggersForService(@PathVariable serviceName: String): String {
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.showAllTriggersForService(serviceName)}
-            </pre>
-            </div>""".trimIndent()
+        return htmlWrap(triggerInterface.showAllTriggersForService(serviceName))
     }
 
     @GetMapping("/create_{createParam}")
     fun createTrigger(@PathVariable createParam: String): String {
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.createTrigger(createParam)}
-            </pre>
-            </div>""".trimIndent()
+        return htmlWrap(triggerInterface.createTrigger(createParam))
     }
 
     @GetMapping("/disable_{triggerName}")
     fun disableTrigger(@PathVariable triggerName: String): String {
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.disableTrigger(triggerName)}
-            </pre>
-            </div>""".trimIndent()
+        return htmlWrap(triggerInterface.disableTrigger(triggerName))
     }
 
     @GetMapping("/enable_{triggerName}")
     fun enableTrigger(@PathVariable triggerName: String): String {
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.enableTrigger(triggerName)}
-            </pre>
-            </div>""".trimIndent()
+        return htmlWrap(triggerInterface.enableTrigger(triggerName))
     }
 
     @GetMapping("/delete_{triggerName}")
     fun deleteTrigger(@PathVariable triggerName: String): String {
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-${triggerInterface.deleteTrigger(triggerName)}
-            </pre>
-            </div>""".trimIndent()
+        return htmlWrap(triggerInterface.deleteTrigger(triggerName))
     }
 
     @GetMapping("/edit_{triggerName}")
     fun editTrigger(@PathVariable triggerName: String): String {
+        return htmlWrap(triggerInterface.editTrigger(triggerName))
+    }
+    
+    fun htmlWrap(text: String): String{
         return """ <div style="
             display: flex;
             justify-content: center;
             align-items: center;
             ">
             <pre>
-${triggerInterface.editTrigger(triggerName)}
+$text
             <pre>
             </div>""".trimIndent()
     }

@@ -15,13 +15,6 @@ import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.objects.Update
 
-/**
- * TODO Необходимо сделать REST контроллер, для взаимодействия с сервисом, через телеграм хорошо, но нужно по HTTP ходить
- *
- * @ConditionalOnProperty("bot.telegram.enabled", havingValue = "true")
- *
- */
-
 @Component
 @ConditionalOnProperty(
     name = ["telegram.bot.enabled"],

@@ -3,30 +3,23 @@ package com.test.monitoringService.service.polling
 import com.test.monitoringService.model.dto.CreateMetricsEntityDto
 import com.test.monitoringService.service.RestClientService
 import org.springframework.stereotype.Service
-import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @Service
 class MetricsPoller(
     val response: RestClientService,
 ) {
-    val mapper = jacksonObjectMapper()
 
     fun pollingMetrics(url: String, serviceName: String, apiKey: String): CreateMetricsEntityDto {
 // TODO Маппим не в дерево, а в DTO
-        val healthNode = mapper.readTree(response.getHealth(url, apiKey))
+        val health = response.getHealth(url, apiKey)
 
-        val healthStatus = healthNode["status"].asString()
+        val healthStatus = health.status
 
-        val dbName = healthNode
-            ?.get("components")
-            ?.get("db")
-            ?.get("details")
-            ?.get("database")
-            ?.asString() ?: "UNKNOWN"
+        val dbName = health.components?.db?.details?.database ?: "UNKNOWN"
 
         val databaseStatus = when {
-            healthNode["components"]?.has("db") == true ->
-                healthNode["components"]["db"]["status"].asString()
+            health.components?.db != null ->
+                health.components.db.status
             else -> "Null"
         }
 
