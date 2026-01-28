@@ -79,7 +79,6 @@ class MetricsDao(
             )
     }
 }
-
 data class MetricsQueryToReport(
     val serviceName: String,
     val healthStatus: String,

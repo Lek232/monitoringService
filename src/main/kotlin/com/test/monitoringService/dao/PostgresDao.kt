@@ -38,7 +38,6 @@ class PostgresDao(
         )
     }
 }
-
 data class PostgresQueryToReport(
     val serviceName: String?,
     val totalQueries: BigDecimal?,
