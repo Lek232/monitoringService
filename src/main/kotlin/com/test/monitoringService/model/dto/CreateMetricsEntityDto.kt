@@ -17,8 +17,8 @@ data class CreateMetricsEntityDto(
     var threadsLive: Long = 0,
     var jdbcConnectionsActive: Long = 0,
     var jdbcConnectionsMax: Long = 0
-){
-    fun toMetricsEntity(): MetricsEntity =
+)
+    fun CreateMetricsEntityDto.toMetricsEntity(): MetricsEntity =
         MetricsEntity(
             serviceName = this.serviceName,
             healthStatus = this.healthStatus,
@@ -34,5 +34,5 @@ data class CreateMetricsEntityDto(
             jdbcConnectionsActive = this.jdbcConnectionsActive,
             jdbcConnectionsMax = this.jdbcConnectionsMax,
         )
-}
+
 

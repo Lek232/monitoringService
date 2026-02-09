@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface MetricsEntityRepository : JpaRepository<MetricsEntity, Long> {
 
-    fun findFirstByServiceName(serviceName: String): MetricsEntity
+    fun findFirstByServiceName(serviceName: String): MetricsEntity?
 }

@@ -5,50 +5,53 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications", indexes = [
+    Index(name = "idx_notifications_id", columnList = "id DESC"),
+])
 class Notifications(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
-    open var id: Long = 0,
+     var id: Long = 0,
 
     @Column(name = "trigger_name", nullable = false, length = 100)
-    open var triggerName: String = "",
+     var triggerName: String = "",
 
     @Column(name = "service_name", nullable = false, length = 100)
-    open var serviceName: String = "",
+     var serviceName: String = "",
 
     @Column(name = "trigger_metric_name", nullable = false, length = 100)
-    open var triggerMetricName: String = "",
+     var triggerMetricName: String = "",
 
     @Column(name = "trigger_operator_name", nullable = false, length = 100)
-    open var triggerOperatorName: String = "",
+     var triggerOperatorName: String = "",
 
     @Column(name = "trigger_threshold", nullable = false, length = 100)
-    open var triggerThreshold: String = "",
+     var triggerThreshold: String = "",
 
     @Column(name = "current_value", length = 100)
-    open var currentValue: String = "",
+     var currentValue: String = "",
 
     @Column(name = "time", nullable = false)
-    open var time: OffsetDateTime,
+     var time: OffsetDateTime,
 
     @Column(name = "health_status", nullable = false, length = 100)
-    open var healthStatus: String = "",
+     var healthStatus: String = "",
 
     @Column(name = "database_status", length = 100)
-    open var databaseStatus: String = "",
+     var databaseStatus: String = "",
 
     @Column(name = "availability", nullable = false, length = 100)
-    open var availability: String = "",
+     var availability: String = "",
 
     @Column(name = "cpu_usage", nullable = false, length = 100)
-    open var cpuUsage: String = "",
+     var cpuUsage: String = "",
 
     @Column(name = "memory", nullable = false, length = 100)
-    open var memory: String = "",
+     var memory: String = "",
 )

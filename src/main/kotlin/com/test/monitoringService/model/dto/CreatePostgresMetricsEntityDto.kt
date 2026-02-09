@@ -11,8 +11,8 @@ data class CreatePostgresMetricsEntityDto(
     val avgExecTime: Double = 0.0,
     val maxStddevExecTime: Double = 0.0,
     val avgCacheHit: Double = 0.0,
-){
-    fun toPostgresEntity(): PostgresEntity =
+)
+    fun CreatePostgresMetricsEntityDto.toPostgresEntity(): PostgresEntity =
         PostgresEntity(
             serviceName = this.serviceName,
             totalQueries = this.totalQueries,
@@ -22,4 +22,3 @@ data class CreatePostgresMetricsEntityDto(
             maxStddevExecTime = this.maxStddevExecTime,
             avgCacheHit = this.avgCacheHit,
         )
-}

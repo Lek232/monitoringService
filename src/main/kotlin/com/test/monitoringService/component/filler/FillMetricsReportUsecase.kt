@@ -4,8 +4,6 @@ import com.test.monitoringService.dao.MetricsDao
 import com.test.monitoringService.model.dto.ReportMetricsDto
 import org.springframework.stereotype.Component
 
-// TODO нейминг, у нас DTO не может быть компонентом, переименуй в сервис наверное или в Usecase, будет корректнее
-
 @Component
 class FillMetricsReportUsecase(
     val metricsDao: MetricsDao
@@ -16,17 +14,7 @@ class FillMetricsReportUsecase(
             if (metrics.healthStatus == "UNKNOWN") {
                 ReportMetricsDto(serviceName = it)
             } else {
-                ReportMetricsDto(
-                    serviceName = it,
-                    healthStatus = metrics.healthStatus,
-                    databaseStatus = metrics.databaseStatus,
-                    availability = metrics.availability,
-                    memoryLoad = metrics.memoryLoad,
-                    cpuUsage = metrics.cpuUsage,
-                    threadsLive = metrics.threadsLive,
-                    databaseLoad = metrics.databaseLoad,
-                    consumptionDifference = metrics.consumptionDifference,
-                )
+                metrics
             }
         }
 }

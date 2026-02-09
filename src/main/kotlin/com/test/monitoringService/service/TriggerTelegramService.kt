@@ -1,11 +1,10 @@
-package com.test.monitoringService.service.entity
+package com.test.monitoringService.service
 
 import com.test.monitoringService.model.entity.FieldType
 import com.test.monitoringService.model.entity.TriggerEntity
 import com.test.monitoringService.model.entity.TriggerField
 import com.test.monitoringService.model.entity.TriggerOperator
 import com.test.monitoringService.repository.interfaces.MetricsEntityRepository
-import com.test.monitoringService.repository.interfaces.NotificationsRepository
 import com.test.monitoringService.repository.interfaces.TriggerRepository
 import com.test.monitoringService.service.interfaces.TriggerInterface
 import jakarta.transaction.Transactional
@@ -15,9 +14,8 @@ import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 
 @Service
-class TriggerService(
+class TriggerTelegramService(
     val triggerRepository: TriggerRepository,
-    val notificationsRepository: NotificationsRepository,
     val metricsRepository: MetricsEntityRepository
 ) : TriggerInterface {
 
@@ -41,7 +39,6 @@ class TriggerService(
 
     @Transactional
     override fun deleteTrigger(triggerName: String): String {
-
         return if (triggerRepository.deleteByName(triggerName) == 0)
             "Триггер $triggerName не был обнаружен"
         else
@@ -55,20 +52,20 @@ class TriggerService(
             if (param.size != 6) {
                 println(param)
                 return "Заданы не все необходимые параметры. Пример:\n" +
-                        "/create_triggerName,serviceName,CPU_USAGE,GT,80,5"
+                        "/create/triggerName,serviceName,CPU_USAGE,GT,80,5"
             }
             val name = param[0]
-            val serviceName = param[1].ifBlank { "all" }
+            val serviceName = param[1]
             val metric = TriggerField.valueOf(param[2])
             val operator = TriggerOperator.valueOf(param[3])
             val threshold = param[4]
             val cooldown = param[5].toInt()
 
-            if(serviceName != "all" && metricsRepository.findFirstByServiceName(serviceName).serviceName.isEmpty()){
+            if(checkServiceExist(serviceName)){
                 return "Сервис с именем $serviceName не существует"
             }
 
-            if(serviceName != "all" && triggerRepository.findByName(name) != null){
+            if(triggerRepository.findByName(name) != null){
                 return "Триггер с именем $name уже существует"
             }
 
@@ -105,7 +102,7 @@ class TriggerService(
                     ------------------------------------
                     ID: ${saved.id}
                     Название: ${saved.name}
-                    Сервис: ${if (saved.serviceName != "all") saved.serviceName else "Все"}
+                    Сервис: ${saved.serviceName}
                     Условие: ${saved.metric} ${saved.operator} ${saved.threshold}
                     Cooldown: ${saved.cooldownMinutes} мин
                     Используйте /disable_${saved.name} чтобы выключить
@@ -166,7 +163,7 @@ class TriggerService(
 
             if( cooldown == null && threshold == null && operator == null ) {
                 return "Не заданы параметры для изменения. Пример:\n" +
-                        "/edit_name:triggerName,operator:GT,threshold:90,cooldown:5"
+                        "/edit/name:triggerName,operator:GT,threshold:90,cooldown:5"
             }
 
             operator?.let { trigger.operator = operator }
@@ -178,7 +175,7 @@ class TriggerService(
                     ------------------------------------
                     ID: ${updated.id}
                     Название: ${updated.name}
-                    Сервис: ${if (updated.serviceName != "all") updated.serviceName else "Все"}
+                    Сервис: ${updated.serviceName}
                     Условие: ${updated.metric} ${updated.operator} ${updated.threshold}
                     Cooldown: ${updated.cooldownMinutes} мин
                     ------------------------------------
@@ -200,7 +197,7 @@ class TriggerService(
                     """   
                     ID: ${it.id}
                     Название: ${it.name}
-                    Сервис: ${if(it.serviceName != "all") it.serviceName  else "Все"}
+                    Сервис: ${it.serviceName}
                     Условие: ${it.metric} ${it.operator} ${it.threshold}
                     Cooldown: ${it.cooldownMinutes} мин
                     ------------------------------------
@@ -219,7 +216,7 @@ class TriggerService(
                     """
                     ID: ${it.id}
                     Название: ${it.name}
-                    Сервис: ${if (it.serviceName != "all") it.serviceName else "Все"}
+                    Сервис: ${it.serviceName}
                     Условие: ${it.metric} ${it.operator} ${it.threshold}
                     Cooldown: ${it.cooldownMinutes} мин
                     ------------------------------------
@@ -238,39 +235,12 @@ class TriggerService(
                     """ 
                     ID: ${it.id}
                     Название: ${it.name}
-                    Сервис: ${if (it.serviceName != "all") it.serviceName else "Все"}
+                    Сервис: ${it.serviceName}
                     Условие: ${it.metric} ${it.operator} ${it.threshold}
                     Cooldown: ${it.cooldownMinutes} мин
                     Активен: ${it.enabled}
                     ------------------------------------
                     """.trimIndent() + "\n"
-        }.toString()
-    }
-
-    override fun notify(): String {
-        val notify = notificationsRepository.getLast()
-        if (notify.isEmpty())
-            return "Нет уведомлений от триггеров"
-        return "Сработавшие триггеры:\n------------------------------------\n" +
-        notify.map {
-            "\n" +
-                    """
-                    <pre>
-                    Оповещение: ${it.triggerName}
-                    Сервис: ${it.serviceName}
-                    Условие: ${it.triggerMetricName} ${it.triggerOperatorName} ${it.triggerThreshold}
-                    Текущее значение: ${it.currentValue}
-                    Time: ${it.time}
-                    
-                    Статус сервиса:
-                    - Health: ${it.healthStatus}
-                    - Database: ${it.databaseStatus}
-                    - Availability: ${it.availability}%
-                    - CPU: ${it.cpuUsage}%
-                    - Memory: ${it.memory}%
-                    ------------------------------------
-                    </pre>
-        """.trimIndent()
         }.toString()
     }
 
@@ -285,5 +255,9 @@ class TriggerService(
     private fun String.isNumber() = this.toDoubleOrNull() != null
 
     private fun checkDatabase(serviceName: String): Boolean =
-        metricsRepository.findFirstByServiceName(serviceName).databaseStatus == "Null"
+        metricsRepository.findFirstByServiceName(serviceName)?.databaseStatus == "Null"
+
+    private fun checkServiceExist(serviceName: String): Boolean{
+        return metricsRepository.findFirstByServiceName(serviceName)?.serviceName?.isEmpty() ?: true
+    }
 }

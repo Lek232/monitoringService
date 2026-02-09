@@ -1,24 +1,37 @@
 package com.test.monitoringService.model.dto
 
 import com.test.monitoringService.model.entity.Notifications
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.OffsetDateTime
-
+@Schema(description = "Уведомления о срабатывании триггеров")
 class NotificationsDto (
-    var triggerName: String,
-    var serviceName: String,
-    var triggerMetricName: String,
-    var triggerOperatorName: String,
-    var triggerThreshold: String,
-    var currentValue: String,
-    var time: OffsetDateTime,
-    var healthStatus: String,
-    var databaseStatus: String,
-    var availability: String,
-    var cpuUsage: String,
-    var memory: String,
+    @Schema(description = "Имя триггера")
+    val triggerName: String,
+    @Schema(description = "Имя сервиса")
+    val serviceName: String,
+    @Schema(description = "Метрика")
+    val triggerMetricName: String,
+    @Schema(description = "Оператор сравнения")
+    val triggerOperatorName: String,
+    @Schema(description = "Пороговое значение")
+    val triggerThreshold: String,
+    @Schema(description = "Значение при котором сработал триггер")
+    val currentValue: String,
+    @Schema(description = "Дата и время (по Гринвичу)")
+    val time: OffsetDateTime,
+    @Schema(description = "Состояние сервиса")
+    val healthStatus: String,
+    @Schema(description = "Состояние БД")
+    val databaseStatus: String,
+    @Schema(description = "Доступность сервиса в %")
+    val availability: String,
+    @Schema(description = "Использование CPU в %")
+    val cpuUsage: String,
+    @Schema(description = "Загрузка памяти в %")
+    val memory: String,
 )
-{
-    fun toNotificationsEntity(): Notifications =
+
+    fun NotificationsDto.toNotificationsEntity(): Notifications =
         Notifications(
             triggerName = this.triggerName,
             serviceName = this.serviceName,
@@ -33,4 +46,3 @@ class NotificationsDto (
             cpuUsage = this.cpuUsage,
             memory = this.memory,
         )
-}

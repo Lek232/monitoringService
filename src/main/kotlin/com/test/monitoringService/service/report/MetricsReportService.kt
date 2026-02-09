@@ -25,7 +25,7 @@ class MetricsReportService(
                 if (it.databaseStatus != "Null") {
                     "|${it.databaseStatus}"
                 } else { "|-" },
-                if (it.availability > 100) "|100.0%" else "|${it.availability}%",
+                "|${it.availability}%",
                 "|${it.memoryLoad}%",
                 "|${it.cpuUsage}%",
                 "|${it.threadsLive}",

@@ -2,7 +2,7 @@ package com.test.monitoringService.model.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-class GetMetricDto {
+class GetMetricsDto {
 
     @JsonIgnoreProperties
     data class Metric(

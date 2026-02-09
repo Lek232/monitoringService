@@ -15,13 +15,6 @@ import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.objects.Update
 
-/**
- * TODO Необходимо сделать REST контроллер, для взаимодействия с сервисом, через телеграм хорошо, но нужно по HTTP ходить
- *
- * @ConditionalOnProperty("bot.telegram.enabled", havingValue = "true")
- *
- */
-
 @Component
 @ConditionalOnProperty(
     name = ["telegram.bot.enabled"],
@@ -110,12 +103,12 @@ class TelegramBot(
             "/triggers" -> {
                 senderService.sendMessage(
                     chatId, """
-                    /create_{triggerName} - создать триггер
-                    /enable_{triggerName} - активировать триггер
-                    /disable_{triggerName} - выключить триггер
-                    /edit_{triggerName} - изменить триггер
-                    /delete_{triggerName} - удалить триггер
-                    /allForService_{serviceName} - список всех триггеров сервиса
+                    /create/{triggerName} - создать триггер
+                    /enable/{triggerName} - активировать триггер
+                    /disable/{triggerName} - выключить триггер
+                    /edit/{triggerName} - изменить триггер
+                    /delete/{triggerName} - удалить триггер
+                    /allForService/{serviceName} - список всех триггеров сервиса
                     /all - список всех триггеров
                     /allActive - список всех активных триггеров
                     /stopTriggers - остановить получение триггеров
@@ -149,35 +142,35 @@ class TelegramBot(
 
             else -> {
                 when {
-                    messageText.startsWith("/enable_") -> {
-                        val triggerName = messageText.substringAfter("_")
+                    messageText.startsWith("/enable/") -> {
+                        val triggerName = messageText.substringAfter("enable/")
                         senderService.sendMessage(chatId,triggerInterface.enableTrigger(triggerName))
                         alertChatIds.add(chatId)
                     }
 
-                    messageText.startsWith("/disable_") -> {
-                        val triggerName = messageText.substringAfter("_")
+                    messageText.startsWith("/disable/") -> {
+                        val triggerName = messageText.substringAfter("disable/")
                         senderService.sendMessage(chatId,triggerInterface.disableTrigger(triggerName))
                     }
 
-                    messageText.startsWith("/create_") -> {
-                        val createParam = messageText.substringAfter("_")
+                    messageText.startsWith("/create/") -> {
+                        val createParam = messageText.substringAfter("create/")
                         senderService.sendMessage(chatId,triggerInterface.createTrigger(createParam))
                         alertChatIds.add(chatId)
                     }
 
-                    messageText.startsWith("/edit_") -> {
-                        val triggerParam = messageText.substringAfter("_")
+                    messageText.startsWith("/edit/") -> {
+                        val triggerParam = messageText.substringAfter("edit/")
                         senderService.sendMessage(chatId,triggerInterface.editTrigger(triggerParam))
                     }
 
-                    messageText.startsWith("/delete_") -> {
-                        val triggerName = messageText.substringAfter("_")
+                    messageText.startsWith("/delete/") -> {
+                        val triggerName = messageText.substringAfter("delete/")
                         senderService.sendMessage(chatId,triggerInterface.deleteTrigger(triggerName))
                     }
 
-                    messageText.startsWith("/allForService_") -> {
-                        val serviceName = messageText.substringAfter("_")
+                    messageText.startsWith("/allForService/") -> {
+                        val serviceName = messageText.substringAfter("allForService/")
                         senderService.sendMessage(chatId,triggerInterface.showAllTriggersForService(serviceName))
                     }
 
@@ -256,7 +249,7 @@ class TelegramBot(
 *Пример создания триггера:*
  ```
  Имя триггера: triggerName !!! Имя должно быть уникальным !!!
- Сервис: serviceName или all для триггера по всем сервисам
+ Сервис: serviceName
  Метрика: CPU_USAGE
  Оператор: GT
  Порог: 80
@@ -264,18 +257,18 @@ class TelegramBot(
  ```
 
 *Формат команды создания:*
- [create_{triggerName},{сервис},{метрика},{оператор},{порог},{cooldown}]
+ [create/{triggerName},{сервис},{метрика},{оператор},{порог},{cooldown}]
 
 *Пример:*
- [/create_triggerName,serviceName,CPU_USAGE,GT,80,5]
+ [/create/triggerName,serviceName,CPU_USAGE,GT,80,5]
 
 *Пример изменения триггера:*
 
 *Формат команды изменения:*
- [edit_name:{triggerName},operator:{оператор},threshold:{порог},cooldown:{cooldown}]
+ [edit/name:{triggerName},operator:{оператор},threshold:{порог},cooldown:{cooldown}]
 
 *Пример:*
- [/edit_name:triggerName,operator:GT,threshold:90,cooldown:5]
+ [/edit/name:triggerName,operator:GT,threshold:90,cooldown:5]
 
 *Можно указывать конкретные поля, которые нужно изменить. Имя триггера, сервис, метрика, не изменяются
 *Имя указывается обязательно*

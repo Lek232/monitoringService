@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface TriggerRepository : JpaRepository<TriggerEntity, Long> {
 
-    @Query("SELECT t FROM TriggerEntity t WHERE t.enabled = true AND (t.serviceName = 'all' OR t.serviceName = :serviceName)")
+    @Query("SELECT t FROM TriggerEntity t WHERE t.enabled = true AND t.serviceName = :serviceName")
     fun findActiveTriggers(@Param("serviceName") serviceName: String): List<TriggerEntity>
 
     fun findByEnabledTrue(): List<TriggerEntity>

@@ -3,6 +3,8 @@ package com.test.monitoringService.service
 import com.test.monitoringService.component.filler.FillTiggerUsecase
 import com.test.monitoringService.component.telegramBot.TelegramBot
 import com.test.monitoringService.configuration.ServiceConfig
+import com.test.monitoringService.model.dto.toMetricsEntity
+import com.test.monitoringService.model.dto.toPostgresEntity
 import com.test.monitoringService.model.entity.MetricsEntity
 import com.test.monitoringService.service.entity.MetricsService
 import com.test.monitoringService.service.entity.PostgresService

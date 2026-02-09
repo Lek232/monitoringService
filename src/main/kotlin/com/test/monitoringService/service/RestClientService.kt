@@ -1,17 +1,10 @@
 package com.test.monitoringService.service
 
 import com.test.monitoringService.model.dto.GetHealthDto.Health
-import com.test.monitoringService.model.dto.GetMetricDto.Metric
+import com.test.monitoringService.model.dto.GetMetricsDto.Metric
 import com.test.monitoringService.model.dto.GetPostgresMetricsDto
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
-
-/**
- * TODO Используй [jakarta.persistence.EntityManager] и всместо Map<String, Any> Возращай DTO
- */
-/**
- * TODO Вместо .body(String::class.java) Необходимо определить интерфейс который мы ожидаем и который будем маппить
- */
 
 @Service
 class RestClientService {

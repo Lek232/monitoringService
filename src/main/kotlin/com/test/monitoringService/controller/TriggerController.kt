@@ -1,70 +1,156 @@
 package com.test.monitoringService.controller
 
 
-import com.test.monitoringService.service.interfaces.TriggerInterface
+import com.test.monitoringService.model.dto.CreateTriggerDto
+import com.test.monitoringService.model.dto.TriggerResponseDto
+import com.test.monitoringService.model.dto.UpdateTriggerDto
+import com.test.monitoringService.service.controller.TriggerControllerService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/triggers")
+@Tag(name = "Triggers", description = "Управление триггерами")
 class TriggerController(
-    val triggerInterface: TriggerInterface,
+    val triggerControllerService : TriggerControllerService,
 ) {
 
-    @GetMapping("/all")
-    fun getAllTriggers():String{
-       return htmlWrap(triggerInterface.showAllTriggers())
+    @GetMapping
+    @Operation(summary = "Получить все триггеры")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Успешно"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun getAllTriggers(): ResponseEntity<List<TriggerResponseDto>>{
+       return triggerControllerService.showAllTriggers()
     }
 
-    @GetMapping("/allActive")
-    fun getAllActiveTriggers():String{
-        return htmlWrap(triggerInterface.showAllActiveTriggers())
+    @GetMapping("/active")
+    @Operation(summary = "Получить все активные триггеры")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Успешно"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+            ]
+    )
+    fun getAllActiveTriggers(): ResponseEntity<List<TriggerResponseDto>>{
+        return triggerControllerService.showAllActiveTriggers()
     }
 
-    @GetMapping("/allForService_{serviceName}")
-    fun getAllTriggersForService(@PathVariable serviceName: String): String {
-        return htmlWrap(triggerInterface.showAllTriggersForService(serviceName))
+    @GetMapping("/service/{serviceName}")
+    @Operation(
+        summary = "Получить все триггеры для сервиса",
+        description = "Введите имя сервиса"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Успешно"),
+            ApiResponse(responseCode = "404", description = "Не найден"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun getAllTriggersForService(
+        @Parameter(
+            description = "Имя сервиса",
+            example = "serviceName",
+            required = true,
+        )
+        @PathVariable serviceName: String): ResponseEntity<List<TriggerResponseDto>> {
+        return triggerControllerService.showAllTriggersForService(serviceName)
     }
 
-    @PostMapping("/create_{createParam}")
-    fun createTrigger(@PathVariable createParam: String): String {
-        return htmlWrap(triggerInterface.createTrigger(createParam))
+    @PatchMapping("/switch/{triggerName}")
+    @Operation(
+        summary = "Включение или отключение триггера",
+        description = "Введите имя триггера"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Успешно"),
+            ApiResponse(responseCode = "404", description = "Не найден"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun switchTrigger(
+        @Parameter(
+            description = "Имя триггера",
+            example = "triggerName",
+            required = true,
+        )
+        @PathVariable triggerName: String): ResponseEntity<String> {
+        return triggerControllerService.switchTrigger(triggerName)
     }
 
-    @PutMapping("/disable_{triggerName}")
-    fun disableTrigger(@PathVariable triggerName: String): String {
-        return htmlWrap(triggerInterface.disableTrigger(triggerName))
+    @DeleteMapping("/{triggerName}")
+    @Operation(
+        summary = "Удаление триггера",
+        description = "Введите имя триггера подлежащего удалению"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Удаление успешно"),
+            ApiResponse(responseCode = "404", description = "Не найден"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun deleteTrigger(
+        @Parameter(
+            description = "Имя сервиса",
+            example = "serviceName",
+            required = true,
+        )
+        @PathVariable triggerName: String): ResponseEntity<String> {
+        return triggerControllerService.deleteTrigger(triggerName)
     }
 
-    @PutMapping("/enable_{triggerName}")
-    fun enableTrigger(@PathVariable triggerName: String): String {
-        return htmlWrap(triggerInterface.enableTrigger(triggerName))
+    @PostMapping
+    @Operation(
+        summary = "Создание триггера",
+        description = "Введите параметры создаваемого триггера"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Успешно"),
+            ApiResponse(responseCode = "400", description = "Неверный запрос"),
+            ApiResponse(responseCode = "404", description = "Не найден"),
+            ApiResponse(responseCode = "409", description = "Триггер уже существует"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun createTrigger(@RequestBody createParam: CreateTriggerDto) {
+        triggerControllerService.createTrigger(createParam)
     }
 
-    @DeleteMapping("/delete_{triggerName}")
-    fun deleteTrigger(@PathVariable triggerName: String): String {
-        return htmlWrap(triggerInterface.deleteTrigger(triggerName))
-    }
-
-    @PutMapping("/edit_{triggerName}")
-    fun editTrigger(@PathVariable triggerName: String): String {
-        return htmlWrap(triggerInterface.editTrigger(triggerName))
-    }
-    
-    fun htmlWrap(text: String): String{
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-$text
-            <pre>
-            </div>""".trimIndent()
+    @PatchMapping("/{triggerName}")
+    @Operation(
+        summary = "Изменение триггера",
+        description = "Введите параметры для изменения триггера. Можно вводить не все параметры",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Успешно"),
+            ApiResponse(responseCode = "400", description = "Неверный запрос"),
+            ApiResponse(responseCode = "404", description = "Не найден"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun updateTrigger(@PathVariable triggerName: String,
+                      @RequestBody triggerBody: UpdateTriggerDto): ResponseEntity<String> {
+        return triggerControllerService.updateTrigger(triggerName, triggerBody)
     }
 }

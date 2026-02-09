@@ -3,6 +3,7 @@ package com.test.monitoringService.service
 import com.test.monitoringService.component.telegramBot.TelegramBot
 import com.test.monitoringService.model.dto.NotificationsDto
 import com.test.monitoringService.model.dto.TriggerDto
+import com.test.monitoringService.model.dto.toNotificationsEntity
 import com.test.monitoringService.model.entity.FieldType
 import com.test.monitoringService.model.entity.TriggerEntity
 import com.test.monitoringService.model.entity.TriggerField
@@ -59,8 +60,8 @@ class TriggerCheckService(
         val value = getFieldValue(trigger.metric, dto)
 
         return when (trigger.operator) {
-            TriggerOperator.EQ -> value == trigger.threshold
-            TriggerOperator.NE -> value != trigger.threshold
+            TriggerOperator.EQ -> ((value as? Number)?.toDouble() ?: 0.0) == (trigger.threshold.toDouble())
+            TriggerOperator.NE -> ((value as? Number)?.toDouble() ?: 0.0) != (trigger.threshold.toDouble())
             TriggerOperator.GT -> ((value as? Number)?.toDouble() ?: 0.0) > trigger.threshold.toDouble()
             TriggerOperator.LT -> ((value as? Number)?.toDouble() ?: 0.0) < trigger.threshold.toDouble()
             TriggerOperator.GTE -> ((value as? Number)?.toDouble() ?: 0.0) >= trigger.threshold.toDouble()

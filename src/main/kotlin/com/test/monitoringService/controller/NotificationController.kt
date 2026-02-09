@@ -1,31 +1,30 @@
 package com.test.monitoringService.controller
 
-
-import com.test.monitoringService.service.interfaces.TriggerInterface
+import com.test.monitoringService.model.dto.NotificationsDto
+import com.test.monitoringService.service.controller.TriggerControllerService
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Notifications", description = "Уведомления о срабатывании триггеров")
 class NotificationController(
-    val triggerInterface: TriggerInterface,
+    val triggerControllerService : TriggerControllerService,
 ) {
 
     @GetMapping("/notifications")
-    fun getNotifications (): String{
-        return htmlWrap(triggerInterface.notify())
-    }
-
-    fun htmlWrap(text: String): String{
-        return """ <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ">
-            <pre>
-$text
-            <pre>
-            </div>""".trimIndent()
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Успешно"),
+            ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера"),
+        ]
+    )
+    fun getNotifications(): ResponseEntity<List<NotificationsDto>>{
+        return triggerControllerService.notify()
     }
 }

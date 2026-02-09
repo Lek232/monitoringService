@@ -29,6 +29,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0-RC")
     implementation("org.telegram:telegrambots-springboot-longpolling-starter:9.2.1")
     implementation("org.telegram:telegrambots-client:9.2.1")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")

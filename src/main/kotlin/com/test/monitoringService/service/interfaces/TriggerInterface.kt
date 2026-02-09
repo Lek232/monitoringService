@@ -10,5 +10,4 @@ interface TriggerInterface {
     fun showAllTriggersForService(serviceName: String): String
     fun showAllActiveTriggers(): String
     fun showAllTriggers(): String
-    fun notify(): String
 }

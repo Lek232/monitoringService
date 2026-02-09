@@ -1,5 +1,6 @@
 package com.test.monitoringService.model.entity
 
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -58,21 +59,36 @@ class TriggerEntity(
     var updatedAt: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 )
 
+@Schema(description = "Доступные метрики")
 enum class TriggerField {
+    @Schema(description = "Состояние сервиса")
     HEALTH_STATUS(FieldType.TEXT, FieldBelongsDb.FALSE),
+    @Schema(description = "Доступность сервиса")
     AVAILABILITY(FieldType.NUMERIC, FieldBelongsDb.FALSE),
+    @Schema(description = "Загрузка памяти сервиса")
     MEMORY_LOAD(FieldType.NUMERIC, FieldBelongsDb.FALSE),
+    @Schema(description = "Использование СPU")
     CPU_USAGE(FieldType.NUMERIC, FieldBelongsDb.FALSE),
+    @Schema(description = "Потоки")
     THREADS_LIVE(FieldType.NUMERIC, FieldBelongsDb.FALSE),
+    @Schema(description = "Рост потребления")
     CONSUMPTION_DIFFERENCE(FieldType.NUMERIC, FieldBelongsDb.FALSE),
 
+    @Schema(description = "Состояние БД")
     DATABASE_STATUS(FieldType.TEXT, FieldBelongsDb.TRUE),
+    @Schema(description = "Нагрузка на БД")
     DATABASE_LOAD(FieldType.NUMERIC, FieldBelongsDb.TRUE),
+    @Schema(description = "Всего запросов SQL")
     TOTAL_QUERIES(FieldType.NUMERIC, FieldBelongsDb.TRUE),
+    @Schema(description = "Всего вызовов запросов SQL")
     TOTAL_CALLS(FieldType.NUMERIC, FieldBelongsDb.TRUE),
+    @Schema(description = "Максимальное время выполнения запроса")
     MAX_TOTAL_TIME_MS(FieldType.NUMERIC, FieldBelongsDb.TRUE),
+    @Schema(description = "Среднее время выполнения запроса")
     AVG_EXEC_TIME_MS(FieldType.NUMERIC, FieldBelongsDb.TRUE),
+    @Schema(description = "Максимальное отклонение от среднего времени выполнения запроса")
     MAX_STDDEV_EXEC_TIME_MS(FieldType.NUMERIC, FieldBelongsDb.TRUE),
+    @Schema(description = "Среднее попадание в кэш")
     AVG_CACHE_HIT(FieldType.NUMERIC, FieldBelongsDb.TRUE);
 
     enum class FieldBelongsDb {
@@ -94,14 +110,23 @@ enum class FieldType {
     TEXT
 }
 
+@Schema(description = "Операторы сравнения")
 enum class TriggerOperator {
+    @Schema(description = "Равно (числовой)")
     EQ(FieldType.NUMERIC),
+    @Schema(description = "Не равно (числовой)")
     NE(FieldType.NUMERIC),
+    @Schema(description = "Больше (числовой)")
     GT(FieldType.NUMERIC),
+    @Schema(description = "Меньше (числовой)")
     LT(FieldType.NUMERIC),
+    @Schema(description = "Больше или равно (числовой)")
     GTE(FieldType.NUMERIC),
+    @Schema(description = "Меньше или равно (числовой)")
     LTE(FieldType.NUMERIC),
+    @Schema(description = "Содержит (текстовый)")
     CONTAINS(FieldType.TEXT),
+    @Schema(description = "Не содержит (текстовый)")
     NOT_CONTAINS(FieldType.TEXT);
 
     val type: FieldType
