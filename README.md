@@ -6,7 +6,7 @@
 
 - Сбор метрик - автоматический опрос /actuator/metrics и /actuator/health у микросервисов.
 - Метрики PostgreSQL - сбор статистики запросов к БД через эндпоинт /api/postgres-metrics.
-- Планировщик - периодический сбор метрик каждые 10 секунд (настраиваемо).
+- Планировщик - периодический сбор метрик.
 - Telegram-бот - отправка отчётов и уведомлений о срабатывании триггеров.
 - Триггеры - гибкая система с поддержкой числовых и текстовых метрик, операторов сравнения, cooldown и состояния активности.
 - HTML-отчёты - форматированные отчёты в виде моноширинного текста для Telegram и API.
@@ -19,7 +19,7 @@
 - Фреймворк: Spring Boot 4.0.1 (Web MVC, Data JPA)
 - База данных: PostgreSQL 17 (с поддержкой pg_stat_statements)
 - ORM: Hibernate через Spring Data JPA
-- API документация: Springdoc OpenAPI 3.0.1 (Swagger)
+- API документация: Springdoc OpenAPI (Swagger)
 - Telegram: Telegram Bots API (Long Polling)
 - Сборка: Gradle (Kotlin DSL)
 - Контейнеризация: Docker + Docker Compose
@@ -36,30 +36,36 @@
 ### Локальный запуск (без Docker)
 
 Клонируем репозиторий:
-git clone https://github.com/your-username/monitoring-service.git
-cd monitoring-service
-
+```bash
+git clone https://github.com/Lek232/monitoringService.git
+cd monitoringService
+```
 Создаём базу данных PostgreSQL вручную:
+```bash
 createdb -U postgres metrics
-
+```
 Настраиваем переменные окружения (или редактируем application.yaml):
+```bash
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/metrics
 export SPRING_DATASOURCE_USERNAME=postgres
 export SPRING_DATASOURCE_PASSWORD=1234
-
+```
 Сборка и запуск:
+```bash
 ./gradlew bootJar
 java -jar build/libs/*.jar
-
+```
 ### Запуск через Docker Compose (рекомендуется)
 
 Клонируем репозиторий:
-git clone https://github.com/your-username/monitoring-service.git
-cd monitoring-service
-
+```bash
+git clone https://github.com/Lek232/monitoringService.git
+cd monitoringService
+```
 Запускаем все контейнеры:
+```bash
 docker-compose up --build
-
+```
 После запуска:
 - Сервис доступен по адресу: http://localhost:8080
 - Swagger UI: http://localhost:8080/swagger-ui.html
@@ -70,7 +76,7 @@ docker-compose up --build
 Все настройки задаются в application.yaml или через переменные окружения.
 
 Основные параметры:
-
+```yaml
 services:
   list:
     - name: "example_service"
@@ -88,34 +94,34 @@ spring:
     url: jdbc:postgresql://localhost:5432/metrics
     username: postgres
     password: "1234"
-
+```
 ## Структура проекта
-
+```
 src/main/kotlin/com/test/monitoringService/
-  component/              Usecase-компоненты (filler)
-  configuration/          Конфигурации (BotConfig, ServiceConfig)
-  controller/             REST-контроллеры (Report, Trigger, Notification)
-  dao/                    DAO-слой (прямые SQL-запросы)
-  model/                  DTO, Entity, Enum'ы
-  repository/             Spring Data JPA репозитории
-  service/                Бизнес-логика, REST-клиент, планировщик
-  MonitoringServiceApplication.kt
+component/              Usecase-компоненты (заполнение DTO)
+configuration/          Конфигурации (BotConfig, ServiceConfig)
+controller/             REST-контроллеры (Report, Trigger, Notification)
+dao/                    DAO-слой (прямые SQL-запросы)
+model/                  DTO, Entity, Enum'ы
+repository/             Spring Data JPA репозитории
+service/                Бизнес-логика, REST-клиент, планировщик
+MonitoringServiceApplication.kt
 
 src/main/resources/
-  application.yaml        Основной конфиг
-  schema.sql              Инициализация БД (pg_stat_statements)
+application.yaml        Основной конфиг
+schema.sql              Инициализация БД (pg_stat_statements)
 
 build.gradle.kts          Сборка Gradle (Kotlin DSL)
 docker-compose.yaml       Docker Compose
 Dockerfile                Многоэтапный Dockerfile
-
+```
 ## API Эндпоинты
 
 Swagger UI доступен по адресу:
 http://localhost:8080/swagger-ui.html
 
 Основные эндпоинты:
-
+```
 GET /api/metrics - Получить метрики всех сервисов
 GET /api/postgres - Получить метрики PostgreSQL
 GET /api/triggers - Получить все триггеры
@@ -125,11 +131,11 @@ PATCH /api/triggers/{triggerName} - Обновить триггер
 PATCH /api/triggers/switch/{triggerName} - Включить/выключить триггер
 DELETE /api/triggers/{triggerName} - Удалить триггер
 GET /api/notifications - Последние 50 уведомлений
-
+```
 ## Telegram-бот
 
 Если включён (telegram.bot.enabled=true), бот отвечает на команды:
-
+```
 /start - Начать получать периодические отчёты
 /stop - Остановить получение отчётов
 /report - Получить отчёт по метрикам сейчас
@@ -143,20 +149,22 @@ GET /api/notifications - Последние 50 уведомлений
 /all - Список всех триггеров
 /allActive - Список активных триггеров
 /allForService/name - Триггеры для конкретного сервиса
-
+```
 ## Триггеры (система оповещений)
 
 Доступные метрики:
 
 Для сервиса:
+```
 - HEALTH_STATUS - состояние сервиса (текст)
 - AVAILABILITY - доступность в процентах
 - MEMORY_LOAD - загрузка памяти в процентах
 - CPU_USAGE - использование CPU в процентах
 - THREADS_LIVE - количество потоков
 - CONSUMPTION_DIFFERENCE - рост потребления
-
+```
 Для базы данных (если есть):
+```
 - DATABASE_STATUS - состояние БД (текст)
 - DATABASE_LOAD - нагрузка на БД в процентах
 - TOTAL_QUERIES - общее число запросов
@@ -165,26 +173,29 @@ GET /api/notifications - Последние 50 уведомлений
 - AVG_EXEC_TIME_MS - среднее время выполнения (мс)
 - MAX_STDDEV_EXEC_TIME_MS - максимальное отклонение (мс)
 - AVG_CACHE_HIT - попадание в кэш в процентах
-
+```
 Операторы сравнения:
-
+```
 Числовые: EQ, NE, GT, LT, GTE, LTE
 Текстовые: CONTAINS, NOT_CONTAINS
-
+```
 Пример создания триггера через API:
 
+```
 {
-  "name": "high_cpu_trigger",
-  "serviceName": "security",
-  "metric": "CPU_USAGE",
-  "operator": "GT",
-  "threshold": "80",
-  "cooldown": 5
+    "name": "high_cpu_trigger",
+    "serviceName": "security",
+    "metric": "CPU_USAGE",
+    "operator": "GT",
+    "threshold": "80",
+    "cooldown": 5
 }
+```
 
 ## Контакты
-
+```
 Автор: Толкачев Олег
 Email: olega232@gmail.com
 Telegram: @Lek1752
 Ссылка на проект: https://github.com/Lek232/monitoringService
+```
