@@ -1,93 +1,190 @@
-# Monitoring App
+# Monitoring Service
 
+Сервис для сбора, хранения и визуализации метрик микросервисов, а также управления триггерами для оповещений. Поддерживает интеграцию с Telegram, REST API, автоматический опрос метрик и гибкую систему триггеров.
 
+## Возможности
 
-## Getting started
+- Сбор метрик - автоматический опрос /actuator/metrics и /actuator/health у микросервисов.
+- Метрики PostgreSQL - сбор статистики запросов к БД через эндпоинт /api/postgres-metrics.
+- Планировщик - периодический сбор метрик каждые 10 секунд (настраиваемо).
+- Telegram-бот - отправка отчётов и уведомлений о срабатывании триггеров.
+- Триггеры - гибкая система с поддержкой числовых и текстовых метрик, операторов сравнения, cooldown и состояния активности.
+- HTML-отчёты - форматированные отчёты в виде моноширинного текста для Telegram и API.
+- REST API - полное управление триггерами и получение отчётов через Swagger UI.
+- Docker-поддержка - готовые контейнеры для PostgreSQL и самого сервиса.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Технологии
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Язык: Kotlin 2.2.21
+- Фреймворк: Spring Boot 4.0.1 (Web MVC, Data JPA)
+- База данных: PostgreSQL 17 (с поддержкой pg_stat_statements)
+- ORM: Hibernate через Spring Data JPA
+- API документация: Springdoc OpenAPI 3.0.1 (Swagger)
+- Telegram: Telegram Bots API (Long Polling)
+- Сборка: Gradle (Kotlin DSL)
+- Контейнеризация: Docker + Docker Compose
+- HTTP-клиент: RestClient (синхронный)
 
-## Add your files
+## Установка и запуск
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### Требования
 
-```
-cd existing_repo
-git remote add origin https://dtechs.gitlab.yandexcloud.net/dreamteam/backend/monitoring-app.git
-git branch -M master
-git push -uf origin master
-```
+- JDK 21 (или совместимая JRE 21)
+- Docker и Docker Compose
+- PostgreSQL 17 (если запуск без Docker)
 
-## Integrate with your tools
+### Локальный запуск (без Docker)
 
-- [ ] [Set up project integrations](https://dtechs.gitlab.yandexcloud.net/dreamteam/backend/monitoring-app/-/settings/integrations)
+Клонируем репозиторий:
+git clone https://github.com/your-username/monitoring-service.git
+cd monitoring-service
 
-## Collaborate with your team
+Создаём базу данных PostgreSQL вручную:
+createdb -U postgres metrics
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+Настраиваем переменные окружения (или редактируем application.yaml):
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/metrics
+export SPRING_DATASOURCE_USERNAME=postgres
+export SPRING_DATASOURCE_PASSWORD=1234
 
-## Test and Deploy
+Сборка и запуск:
+./gradlew bootJar
+java -jar build/libs/*.jar
 
-Use the built-in continuous integration in GitLab.
+### Запуск через Docker Compose (рекомендуется)
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Клонируем репозиторий:
+git clone https://github.com/your-username/monitoring-service.git
+cd monitoring-service
 
-***
+Запускаем все контейнеры:
+docker-compose up --build
 
-# Editing this README
+После запуска:
+- Сервис доступен по адресу: http://localhost:8080
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- PostgreSQL: localhost:5432 (логин/пароль: postgres/1234)
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## Конфигурация
 
-## Suggestions for a good README
+Все настройки задаются в application.yaml или через переменные окружения.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Основные параметры:
 
-## Name
-Choose a self-explaining name for your project.
+services:
+  list:
+    - name: "example_service"
+      url: "example_url"
+      apiKey: "example_apiKey"
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+telegram:
+  bot:
+    enabled: true
+    username: "example_bot_name"
+    token: "YOUR_TELEGRAM_BOT_TOKEN"
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/metrics
+    username: postgres
+    password: "1234"
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## Структура проекта
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+src/main/kotlin/com/test/monitoringService/
+  component/              Usecase-компоненты (filler)
+  configuration/          Конфигурации (BotConfig, ServiceConfig)
+  controller/             REST-контроллеры (Report, Trigger, Notification)
+  dao/                    DAO-слой (прямые SQL-запросы)
+  model/                  DTO, Entity, Enum'ы
+  repository/             Spring Data JPA репозитории
+  service/                Бизнес-логика, REST-клиент, планировщик
+  MonitoringServiceApplication.kt
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+src/main/resources/
+  application.yaml        Основной конфиг
+  schema.sql              Инициализация БД (pg_stat_statements)
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+build.gradle.kts          Сборка Gradle (Kotlin DSL)
+docker-compose.yaml       Docker Compose
+Dockerfile                Многоэтапный Dockerfile
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## API Эндпоинты
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Swagger UI доступен по адресу:
+http://localhost:8080/swagger-ui.html
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Основные эндпоинты:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+GET /api/metrics - Получить метрики всех сервисов
+GET /api/postgres - Получить метрики PostgreSQL
+GET /api/triggers - Получить все триггеры
+GET /api/triggers/active - Получить активные триггеры
+POST /api/triggers - Создать триггер
+PATCH /api/triggers/{triggerName} - Обновить триггер
+PATCH /api/triggers/switch/{triggerName} - Включить/выключить триггер
+DELETE /api/triggers/{triggerName} - Удалить триггер
+GET /api/notifications - Последние 50 уведомлений
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## Telegram-бот
 
-## License
-For open source projects, say how it is licensed.
+Если включён (telegram.bot.enabled=true), бот отвечает на команды:
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+/start - Начать получать периодические отчёты
+/stop - Остановить получение отчётов
+/report - Получить отчёт по метрикам сейчас
+/postgres - Получить отчёт по PostgreSQL
+/triggers - Меню управления триггерами
+/triggersHelp - Подробная справка по триггерам
+/create/name,service,metric,operator,threshold,cooldown - Создать триггер
+/enable/name - Активировать триггер
+/disable/name - Отключить триггер
+/delete/name - Удалить триггер
+/all - Список всех триггеров
+/allActive - Список активных триггеров
+/allForService/name - Триггеры для конкретного сервиса
+
+## Триггеры (система оповещений)
+
+Доступные метрики:
+
+Для сервиса:
+- HEALTH_STATUS - состояние сервиса (текст)
+- AVAILABILITY - доступность в процентах
+- MEMORY_LOAD - загрузка памяти в процентах
+- CPU_USAGE - использование CPU в процентах
+- THREADS_LIVE - количество потоков
+- CONSUMPTION_DIFFERENCE - рост потребления
+
+Для базы данных (если есть):
+- DATABASE_STATUS - состояние БД (текст)
+- DATABASE_LOAD - нагрузка на БД в процентах
+- TOTAL_QUERIES - общее число запросов
+- TOTAL_CALLS - число вызовов
+- MAX_TOTAL_TIME_MS - время самого долгого запроса (мс)
+- AVG_EXEC_TIME_MS - среднее время выполнения (мс)
+- MAX_STDDEV_EXEC_TIME_MS - максимальное отклонение (мс)
+- AVG_CACHE_HIT - попадание в кэш в процентах
+
+Операторы сравнения:
+
+Числовые: EQ, NE, GT, LT, GTE, LTE
+Текстовые: CONTAINS, NOT_CONTAINS
+
+Пример создания триггера через API:
+
+{
+  "name": "high_cpu_trigger",
+  "serviceName": "security",
+  "metric": "CPU_USAGE",
+  "operator": "GT",
+  "threshold": "80",
+  "cooldown": 5
+}
+
+## Контакты
+
+Автор: Толкачев Олег
+Email: olega232@gmail.com
+Telegram: @Lek1752
+Ссылка на проект: https://github.com/Lek232/monitoringService
